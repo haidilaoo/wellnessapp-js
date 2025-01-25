@@ -44,24 +44,57 @@ export const globalStyles = StyleSheet.create({
     width: "100%",
     // backgroundColor: 'rgba(255, 0, 0, 0.3)', //for debugging
     paddingHorizontal: 16, // Horizontal padding (left and right)
-    paddingVertical: 24, // Vertical padding (top and bottom)
+    paddingTop: 24, // Vertical padding (top and bottom)
+    paddingBottom: 48,
+  },
+
+  row: {
+    flexDirection: 'row',
+  },
+
+  spaceBetween: {
+    justifyContent: 'space-between', // Align children to the ends of the main axis
   },
 
   //SPACING
-marginBottomSmall: {
-    marginBottom: 8,
-},
+  gap8: {
+    gap: 8,
+  },
 
-  marginBottomBase: {
+  gap10: {
+    gap:10,
+  },
+
+  gap16: {
+    gap: 16,
+  },
+
+  gap24: {
+    gap: 24,
+  },
+
+  gap32: {
+    gap: 32,
+  },
+
+  gap40: {
+    gap: 40,
+  },
+
+  marginBottom8: {
+    marginBottom: 8,
+  },
+
+  marginBottom16: {
     marginBottom: 16,
   },
-  marginBottomMedium: {
+  marginBottom24: {
     marginBottom: 24,
   },
-  marginBottomLarge: {
+  marginBottom32: {
     marginBottom: 32,
   },
-  
+
   //TEXT
   titleText: {
     fontFamily: "Inter-Bold",
@@ -70,12 +103,30 @@ marginBottomSmall: {
     textAlign: "center",
     marginBottom: 16,
   },
-  subheading: {
+  p: {
     fontFamily: "Inter-Regular",
     fontSize: 16,
     color: COLORS.blackSecondary,
     textAlign: "center",
     lineHeight: 16 * 1.4, // 140% of the font size
+  },
+
+  btnText: {
+    color: COLORS.white,
+    fontFamily: "Inter-Medium",
+    fontSize: 16,
+    lineHeight: 16 * 1.4, // 140% of the font size
+  },
+
+  h2: {
+    fontFamily: "Inter-Bold",
+    fontSize: 24,
+    color: COLORS.black,
+    
+  },
+  
+  textCenter: {
+    textAlign: 'center',
   },
 
   //TEXTBOX

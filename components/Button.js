@@ -14,6 +14,7 @@ const Button = ({
   imageSource,
   imageSize = 24,
   imageStyle,
+  
 }) => {
   const buttonStyles =
     variant === "primary" ? styles.primaryBtn : styles.secondaryBtn;
@@ -66,11 +67,18 @@ const styles = StyleSheet.create({
     borderColor: COLORS.borderDefault,
     borderWidth: 1,
   },
+  checkbox: {
+    backgroundColor: COLORS.white,
+    borderColor: COLORS.borderDefault,
+    borderWidth: 1,
+    alignItems:'flex-start',
+  },
   btnText: {
     color: COLORS.white,
     fontFamily: "Inter-Medium",
     fontSize: 16,
     textAlign: "center",
+    lineHeight: 16 * 1.4, // 140% of the font size
   },
 });
 

@@ -1,3 +1,7 @@
+//TO DO: 
+// 1. fix scaling issue of imageui on different devices: ios & android
+// 2. fix bottom padding of buttons difference on ios and android
+
 import React from "react";
 import { View, Text, StyleSheet, Image } from "react-native";
 import { COLORS, globalStyles } from "../../globalStyles";
@@ -9,9 +13,9 @@ const StartScreen = ({ navigation }) => {
         source={require("../../assets/startscreen-image.png")}
         style={styles.image}
       />
-      <View style={styles.overlay}>
+      <View style={[styles.overlay, {gap: 8,}]}>
         <Text style={globalStyles.titleText}>Welcome to Careot</Text>
-        <Text style={globalStyles.subheading}>
+        <Text style={globalStyles.p}>
           Rooted in Care, growing brighter days.{"\n"}Wellness is just a care-ot
           away🥕
         </Text>
@@ -40,6 +44,7 @@ const styles = StyleSheet.create({
     height: "100%",
     position: "absolute", // Makes the image act as a background
     bottom: "20%",
+    backgroundColor: COLORS.background,
   },
   container: {
     flex: 1,
@@ -55,7 +60,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: "100%",
     paddingHorizontal: 16, // Horizontal padding (left and right)
-    paddingVertical: 48, // Vertical padding (top and bottom)
+    paddingVertical: 24, // Vertical padding (top and bottom)
   },
 });
 
