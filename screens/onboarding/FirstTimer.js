@@ -1,12 +1,12 @@
 import React from "react";
-import { View, Text, StyleSheet, Image, ScrollView } from "react-native";
+import { View, Text, StyleSheet, Image, ScrollView, Dimensions } from "react-native";
 import { COLORS, globalStyles } from "../../globalStyles";
 import Button from "../../components/Button";
 import Checkbox from "../../components/Checkbox";
 
-export default function FirstTimer({ route }) {
-  const { user, handleAuthentication } = route.params; // Extract parameters
-
+export default function FirstTimer({ route, navigation }) {
+  // const { user, handleAuthentication } = route.params; // Extract parameters
+  const screenHeight = Dimensions.get("window").height;
   return (
     // <View style={styles.container}>
     //   <Text style={styles.title}>Welcome</Text>
@@ -26,8 +26,9 @@ export default function FirstTimer({ route }) {
           <Text style={globalStyles.p}>I want to...</Text>
         </View>
         <View style={[{ marginTop: 32 }, globalStyles.gap10]}>
-          <ScrollView style={[{ height: 350 }]}>
+          <ScrollView style={[{ height: screenHeight * 0.4 }]}>
             <View style={{ flex: 1, gap: 10 }}>
+              <Checkbox title="Manage my emotions better" />
               <Checkbox title="Manage my emotions better" />
               <Checkbox title="Manage my emotions better" />
               <Checkbox title="Manage my emotions better" />
@@ -36,7 +37,11 @@ export default function FirstTimer({ route }) {
           </ScrollView>
         </View>
       </View>
-      <Button title="Continue" style={{ alignItems: "flex-start" }} />
+      <Button
+        title="Continue"
+        style={{ alignItems: "flex-start" }}
+        onPress={() => navigation.navigate("CreateName")}
+      />
     </View>
   );
 }

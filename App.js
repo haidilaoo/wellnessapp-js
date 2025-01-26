@@ -12,10 +12,13 @@ import StartScreen from "./screens/onboarding/StartScreen";
 import LoginScreen from "./screens/onboarding/LoginScreen";
 import CreateAccountScreen from "./screens/onboarding/CreateAccountScreen";
 import FirstTimer from "./screens/onboarding/FirstTimer";
+import CreateName from "./screens/onboarding/CreateName";
+import FinishOnboarding from "./screens/onboarding/FinishOnboarding";
 
 // Logged-In Screens
 import HomeScreen from "./screens/tabs/HomeScreen";
 import TherapistScreen from "./screens/tabs/TherapistScreen";
+
 
 // Navigation Stacks
 const Tab = createBottomTabNavigator();
@@ -70,6 +73,16 @@ const OnboardingFlow = () => {
         component={FirstTimer}
         options={{ headerShown: false }}
       />
+         <Stack.Screen
+        name="CreateName"
+        component={CreateName}
+        options={{ headerShown: false }}
+      />
+        <Stack.Screen
+        name="FinishOnboarding"
+        component={FinishOnboarding}
+        options={{ headerShown: false }}
+      />
     </Stack.Navigator>
   );
 };
@@ -122,8 +135,8 @@ export default function App() {
   }
 
   return (
-    <UserProvider>
+
       <RootNavigator />
-    </UserProvider>
+ 
   );
 }

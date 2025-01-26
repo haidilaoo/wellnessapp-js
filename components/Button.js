@@ -14,6 +14,7 @@ const Button = ({
   imageSource,
   imageSize = 24,
   imageStyle,
+  style,
   
 }) => {
   const buttonStyles =
@@ -22,7 +23,7 @@ const Button = ({
     textColor || (variant === "primary" ? COLORS.white : COLORS.black);
 
   return (
-    <TouchableOpacity onPress={onPress}>
+    <TouchableOpacity onPress={onPress} style={style}>
       <View style={[styles.btn, buttonStyles]}>
         {iconName && <Icon name={iconName} size={iconSize} color={iconColor} />}
         {imageSource && (

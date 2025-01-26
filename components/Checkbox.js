@@ -16,18 +16,17 @@ const Checkbox = ({
   imageStyle,
 }) => {
   const [checked, setChecked] = useState(false);
-  const [iconName, setIconName] = useState('square-o'); // default unchecked icon
+  const [iconName, setIconName] = useState("square-o"); // default unchecked icon
   const [iconColor, setIconColor] = useState(COLORS.borderDefault); // default color
 
   const toggleCheckbox = () => {
     if (checked === false) {
       setChecked(true);
-      setIconName('check-square'); // set checked icon
-    setIconColor(COLORS.primary); // set color when checked
-      
+      setIconName("check-square"); // set checked icon
+      setIconColor(COLORS.primary); // set color when checked
     } else {
       setChecked(false);
-      setIconName('square-o'); // set unchecked icon (FontAwesome v4)
+      setIconName("square-o"); // set unchecked icon (FontAwesome v4)
       setIconColor(COLORS.borderDefault); // set color when unchecked
     }
   };
@@ -43,8 +42,13 @@ const Checkbox = ({
         <Text style={[styles.btnText, { color: buttonTextColor }]}>
           {title}
         </Text>
-        { iconName && (
-          <Icon style={{alignSelf: 'center'}} name={iconName} size={iconSize} color={iconColor} />
+        {iconName && (
+          <Icon
+            style={{ alignSelf: "center" }}
+            name={iconName}
+            size={iconSize}
+            color={iconColor}
+          />
         )}
         {checked && imageSource && (
           <Image
@@ -72,7 +76,6 @@ const styles = StyleSheet.create({
     alignSelf: "stretch",
     flexDirection: "row",
     justifyContent: "space-between",
-  
   },
   defaultBtn: {
     backgroundColor: COLORS.white,

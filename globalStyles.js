@@ -80,6 +80,10 @@ export const globalStyles = StyleSheet.create({
   gap40: {
     gap: 40,
   },
+  
+  gap48: {
+    gap: 48,
+  },
 
   marginBottom8: {
     marginBottom: 8,
