@@ -18,21 +18,11 @@ import FinishOnboarding from "./screens/onboarding/FinishOnboarding";
 // Logged-In Screens
 import HomeScreen from "./screens/tabs/HomeScreen";
 import TherapistScreen from "./screens/tabs/TherapistScreen";
-
+import askEmotion from "./screens/tabs/HomeScreen/askEmotion.js";
 
 // Navigation Stacks
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
-
-// Main App Tabs (Logged-In)
-const MainApp = () => {
-  return (
-    <Tab.Navigator>
-      <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Therapist" component={TherapistScreen} />
-    </Tab.Navigator>
-  );
-};
 
 // Authentication Flow
 const AuthFlow = () => {
@@ -73,17 +63,44 @@ const OnboardingFlow = () => {
         component={FirstTimer}
         options={{ headerShown: false }}
       />
-         <Stack.Screen
+      <Stack.Screen
         name="CreateName"
         component={CreateName}
         options={{ headerShown: false }}
       />
-        <Stack.Screen
+      <Stack.Screen
         name="FinishOnboarding"
         component={FinishOnboarding}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>
+  );
+};
+
+const HomeScreenFlow = () => {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen
+        name="askEmotion"
+        component={askEmotion}
+        options={{ headerShown: false }}
+      />
+      {/* <Stack.Screen
+        name="askReason"
+        component={askReason}
+        options={{ headerShown: false }}
+      /> */}
+    </Stack.Navigator>
+  );
+};
+
+// Main App Tabs (Logged-In)
+const MainApp = () => {
+  return (
+    <Tab.Navigator>
+      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Therapist" component={TherapistScreen} />
+    </Tab.Navigator>
   );
 };
 
@@ -111,7 +128,12 @@ const RootNavigator = () => {
           component={OnboardingFlow}
           options={{ headerShown: false }}
         />
-        {/* Main App */}
+        {/* Main App: Recording emotion */}
+        <Stack.Screen
+          name="HomeScreenFlow"
+          component={HomeScreenFlow}
+          options={{ headerShown: false }}
+        />
         <Stack.Screen
           name="MainApp"
           component={MainApp}
@@ -133,10 +155,5 @@ export default function App() {
   if (!loaded) {
     return null;
   }
-
-  return (
-
-      <RootNavigator />
- 
-  );
+  return <RootNavigator />;
 }

@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Dimensions } from "react-native";
 import { color } from "react-native-elements/dist/helpers";
 
 const COLORS = {
@@ -8,6 +8,7 @@ const COLORS = {
   white: "#FFFFFF", // Used for secondary buttons
 
   background: "#F5F6F6",
+  backgroundSecondary: "#E6E6E6",
 
   // TEXT COLORS
   black: "#303030", // Used for headings, secondary button text
@@ -48,12 +49,21 @@ export const globalStyles = StyleSheet.create({
     paddingBottom: 48,
   },
 
+  topbanner: {
+    position: "absolute",
+    top: 0,
+    marginTop: -24,
+    height: undefined, // Fixed height
+    width: Dimensions.get("window").width, // Let the width adjust based on the aspect ratio
+    aspectRatio: 1, // Maintain a 1:1 ratio
+  },
+
   row: {
-    flexDirection: 'row',
+    flexDirection: "row",
   },
 
   spaceBetween: {
-    justifyContent: 'space-between', // Align children to the ends of the main axis
+    justifyContent: "space-between", // Align children to the ends of the main axis
   },
 
   //SPACING
@@ -62,7 +72,7 @@ export const globalStyles = StyleSheet.create({
   },
 
   gap10: {
-    gap:10,
+    gap: 10,
   },
 
   gap16: {
@@ -80,7 +90,7 @@ export const globalStyles = StyleSheet.create({
   gap40: {
     gap: 40,
   },
-  
+
   gap48: {
     gap: 48,
   },
@@ -126,11 +136,10 @@ export const globalStyles = StyleSheet.create({
     fontFamily: "Inter-Bold",
     fontSize: 24,
     color: COLORS.black,
-    
   },
-  
+
   textCenter: {
-    textAlign: 'center',
+    textAlign: "center",
   },
 
   //TEXTBOX

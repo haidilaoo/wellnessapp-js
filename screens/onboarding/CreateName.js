@@ -5,49 +5,44 @@ import { COLORS, globalStyles, theme } from "../../globalStyles";
 import Button from "../../components/Button";
 import Checkbox from "../../components/Checkbox";
 
-
-export default function CreateName({
-    nickname,
-    setNickname,
-    navigation,
- }) {
-
-
+export default function CreateName({ nickname, setNickname, navigation }) {
   return (
     <PaperProvider theme={theme}>
-    <View style={[globalStyles.container, globalStyles.spaceBetween]}>
-      <Image
-        source={require("../../assets/topbanner-image.png")}
-        style={styles.topbanner}
-      />
-      <View>
-        <View style={[globalStyles.gap16, { marginTop: 250 }]}>
-          <Text style={[globalStyles.h2, globalStyles.textCenter]}>
-            What should I call you?
-          </Text>
-          <Text style={globalStyles.p}>
-            This will be the name displayed to the community when you post or
-            comment
-          </Text>
+      <View style={[globalStyles.container, globalStyles.spaceBetween]}>
+        <Image
+          source={require("../../assets/topbanner-image.png")}
+          style={globalStyles.topbanner}
+          resizeMode="contain"
+        />
+        <View>
+          <View style={[globalStyles.gap16, { marginTop: 250 }]}>
+            <Text style={[globalStyles.h2, globalStyles.textCenter]}>
+              What should I call you?
+            </Text>
+            <Text style={globalStyles.p}>
+              This will be the name displayed to the community when you post or
+              comment
+            </Text>
+          </View>
+          <View style={[{ marginTop: 32 }, globalStyles.gap10]}>
+            <TextInput
+              label="Nickname (12 characters)"
+              mode="outlined"
+              style={globalStyles.textInput}
+              theme={{
+                roundness: 16,
+              }}
+              value={nickname}
+              onChangeText={setNickname}
+            ></TextInput>
+          </View>
         </View>
-        <View style={[{ marginTop: 32 }, globalStyles.gap10]}>
-            
-          <TextInput
-            label="Nickname (12 characters)"
-            mode="outlined"
-            style={globalStyles.textInput}
-            theme={{
-              roundness: 16,
-            }}
-            value={nickname}
-            onChangeText={setNickname}
-          ></TextInput>
-         
-        </View>
+        <Button
+          title="Set nickname"
+          style={{ alignItems: "flex-start" }}
+          onPress={() => navigation.navigate("FinishOnboarding")}
+        />
       </View>
-      <Button title="Set nickname" style={{ alignItems: "flex-start" }} 
-      onPress={() => navigation.navigate("FinishOnboarding")}/>
-    </View>
     </PaperProvider>
   );
 }

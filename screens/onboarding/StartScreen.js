@@ -16,7 +16,7 @@ const StartScreen = ({ navigation }) => {
       <View style={[styles.overlay, {gap: 8,}]}>
         <Text style={globalStyles.titleText}>Welcome to Careot</Text>
         <Text style={globalStyles.p}>
-          Rooted in Care, growing brighter days.{"\n"}Wellness is just a care-ot
+          Rooted in care, growing brighter days.{"\n"}Wellness is just a care-ot
           away🥕
         </Text>
         <View style={[{ marginBottom: 48 }]}></View>

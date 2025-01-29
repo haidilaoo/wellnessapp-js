@@ -1,5 +1,12 @@
 import React from "react";
-import { View, Text, StyleSheet, Image, ScrollView, Dimensions } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  ScrollView,
+  Dimensions,
+} from "react-native";
 import { COLORS, globalStyles } from "../../globalStyles";
 import Button from "../../components/Button";
 import Checkbox from "../../components/Checkbox";
@@ -16,7 +23,8 @@ export default function FirstTimer({ route, navigation }) {
     <View style={[globalStyles.container, globalStyles.spaceBetween]}>
       <Image
         source={require("../../assets/topbanner-image.png")}
-        style={styles.topbanner}
+        style={globalStyles.topbanner}
+        resizeMode="contain"
       />
       <View>
         <View style={[globalStyles.gap16, { marginTop: 250 }]}>
@@ -66,5 +74,9 @@ const styles = StyleSheet.create({
   topbanner: {
     position: "absolute",
     top: 0,
+    marginTop: -24,
+    height: undefined, // Fixed height
+    width: Dimensions.get("window").width, // Let the width adjust based on the aspect ratio
+    aspectRatio: 1, // Maintain a 1:1 ratio
   },
 });
