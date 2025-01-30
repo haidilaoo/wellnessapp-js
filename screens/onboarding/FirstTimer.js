@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -11,9 +11,31 @@ import { COLORS, globalStyles } from "../../globalStyles";
 import Button from "../../components/Button";
 import Checkbox from "../../components/Checkbox";
 
+//DATABASE
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "../../firebaseConfig";
+
 export default function FirstTimer({ route, navigation }) {
   // const { user, handleAuthentication } = route.params; // Extract parameters
   const screenHeight = Dimensions.get("window").height;
+  const [checkboxOptions, setCheckboxOptions] = useState([]);
+  
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        const querySnapshot = await getDocs(
+          collection(db, "FirstTimerScreenOptions")
+        );
+        const options = querySnapshot.docs.map((doc) => doc.data().title); // Assuming "title" is the field name
+        setCheckboxOptions(options);
+      } catch (error) {
+        console.error("Error fetching questions:", error);
+      }
+    };
+
+    fetchQuestions();
+  }, []);
+  
   return (
     // <View style={styles.container}>
     //   <Text style={styles.title}>Welcome</Text>
@@ -36,11 +58,9 @@ export default function FirstTimer({ route, navigation }) {
         <View style={[{ marginTop: 32 }, globalStyles.gap10]}>
           <ScrollView style={[{ height: screenHeight * 0.4 }]}>
             <View style={{ flex: 1, gap: 10 }}>
-              <Checkbox title="Manage my emotions better" />
-              <Checkbox title="Manage my emotions better" />
-              <Checkbox title="Manage my emotions better" />
-              <Checkbox title="Manage my emotions better" />
-              <Checkbox title="Manage my emotions better" />
+              {checkboxOptions.map((option, index) => (
+                <Checkbox key={index} title={option} />
+              ))}
             </View>
           </ScrollView>
         </View>

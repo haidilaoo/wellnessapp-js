@@ -15,6 +15,10 @@ import {
   onAuthStateChanged,
   signOut,
 } from "@firebase/auth";
+//TO PERSIST LOGIN DATA
+import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
+import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const firebaseConfig = {
   apiKey: "AIzaSyAryoh-bO90naehPlcOwsahHDIBVHJ_pSM",
@@ -27,12 +31,18 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+//TO PERSIST LOGIN DATA
+const auth = initializeAuth(app, {
+  persistence: getReactNativePersistence(ReactNativeAsyncStorage)
+});
 
 const AuthScreen = ({
   email,
   setEmail,
   password,
   setPassword,
+  confirmPassword,
+  setConfirmPassword,
   isLogin,
   setIsLogin,
   handleAuthentication,
@@ -64,15 +74,19 @@ const AuthScreen = ({
             secureTextEntry
           ></TextInput>
           {!isLogin && (
-          <TextInput
-            label="Confirm password"
-            mode="outlined"
-            style={[globalStyles.textInput, {marginTop: 8,}]}
-            theme={{
-              roundness: 16,
-            }}
-          />)}
-          
+            <TextInput
+              label="Confirm password"
+              mode="outlined"
+              style={[globalStyles.textInput, { marginTop: 8 }]}
+              theme={{
+                roundness: 16,
+              }}
+              value={confirmPassword} // Bind state value
+              onChangeText={(text) => setConfirmPassword(text)} // Update state
+              secureTextEntry
+            />
+          )}
+
           <Text style={[{ margin: 32, alignSelf: "center" }]}>or</Text>
           <Button
             title="Continue with Google"
@@ -117,14 +131,16 @@ const AuthenticatedScreen = ({ user, handleAuthentication }) => {
   );
 };
 
-export default App = ({route}) => {
+export default App = ({ route }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [user, setUser] = useState(null); // Track user authentication state
-  const {mode} = route.params || {}; // || {}; accounts for if mode is undefined
+  const { mode } = route.params || {}; // || {}; accounts for if mode is undefined
   //TO RENDER IF LOGIN UI OR SIGN UP UI DEPENDING ON BUTTON CLICKED
   const [isLogin, setIsLogin] = useState(route.params?.mode === "login"); //set to true if mode=login
   const navigation = useNavigation(); // Access navigation
+
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   //TO CHANGE HEADER TITLE DYNAMICALLY
   useLayoutEffect(() => {
@@ -140,21 +156,34 @@ export default App = ({route}) => {
     return () => unsubscribe();
   }, [auth]);
 
+  const validateConfirmPassword = () => {
+    if (confirmPassword === "") {
+      console.error("Error: Confirm password cannot be empty.");
+      return false;
+    }
+    if (confirmPassword !== password) {
+      console.error("Error: Passwords do not match.");
+      return false;
+    }
+    return true;
+  };
   const handleAuthentication = async () => {
     try {
       if (user) {
         // If user is already authenticated, log out
         console.log("User logged out successfully!");
-
         await signOut(auth);
       } else {
         // Sign in or sign up
         if (isLogin) {
-          // Sign in
+          // Sign in (no need to check confirm password)
           await signInWithEmailAndPassword(auth, email, password);
           console.log("User signed in successfully!");
         } else {
-          // Sign up
+          // Sign up (validate confirm password)
+          if (!validateConfirmPassword()) {
+            return; // Stop execution if validation fails
+          }
           await createUserWithEmailAndPassword(auth, email, password);
           console.log("User created successfully!");
         }
@@ -174,7 +203,7 @@ export default App = ({route}) => {
             name: "OnboardingFlow",
             state: {
               routes: [
-                { name: "FirstTimer", params: {user, handleAuthentication} },
+                { name: "FirstTimer", params: { user, handleAuthentication } },
               ],
             },
           },
@@ -200,6 +229,8 @@ export default App = ({route}) => {
           password={password}
           setPassword={setPassword}
           isLogin={isLogin}
+          confirmPassword={confirmPassword}
+          setConfirmPassword={setConfirmPassword} // Pass state setters to AuthScreen
           setIsLogin={setIsLogin}
           handleAuthentication={handleAuthentication}
         />
