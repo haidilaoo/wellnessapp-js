@@ -3,7 +3,8 @@ import { color } from "react-native-elements/dist/helpers";
 
 const COLORS = {
   primary: "#5E7638", // Brand/green
-  secondary: "#F2F5ED", // Brand/light green
+  secondary: "#C0CFAD", // Brand/lighter green
+  tertiary: "#F2F5ED", //Brand/light green
   orange: "#FF702C", // Brand/orange
   white: "#FFFFFF", // Used for secondary buttons
 
@@ -123,6 +124,14 @@ export const globalStyles = StyleSheet.create({
     color: COLORS.blackSecondary,
     textAlign: "center",
     lineHeight: 16 * 1.4, // 140% of the font size
+  },
+
+  smallText: {
+    fontFamily: "Inter-Regular",
+    fontSize: 14,
+    color: COLORS.black,
+    textAlign: "center",
+    lineHeight: 14 * 1.4, // 140% of the font size
   },
 
   btnText: {

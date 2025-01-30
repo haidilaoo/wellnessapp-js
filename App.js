@@ -9,8 +9,8 @@ import { UserProvider } from "./screens/onboarding/UserContext.js";
 
 // Onboarding Screens
 import StartScreen from "./screens/onboarding/StartScreen";
-import LoginScreen from "./screens/onboarding/LoginScreen";
-import CreateAccountScreen from "./screens/onboarding/CreateAccountScreen";
+// import LoginScreen from "./screens/onboarding/LoginScreen";
+import AuthScreen from "./screens/onboarding/AuthScreen.js";
 import FirstTimer from "./screens/onboarding/FirstTimer";
 import CreateName from "./screens/onboarding/CreateName";
 import FinishOnboarding from "./screens/onboarding/FinishOnboarding";
@@ -19,6 +19,7 @@ import FinishOnboarding from "./screens/onboarding/FinishOnboarding";
 import HomeScreen from "./screens/tabs/HomeScreen";
 import TherapistScreen from "./screens/tabs/TherapistScreen";
 import askEmotion from "./screens/tabs/HomeScreen/askEmotion.js";
+import askReason from "./screens/tabs/HomeScreen/askReason.js";
 
 // Navigation Stacks
 const Tab = createBottomTabNavigator();
@@ -36,19 +37,19 @@ const AuthFlow = () => {
       }}
     >
       <Stack.Screen
-        name="Start"
+        name="Back"
         component={StartScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen
+      {/* <Stack.Screen
         name="Login"
         component={LoginScreen}
-        options={{ headerTitle: "Login" }}
-      />
+        // options={{ headerTitle: "Login" }}
+      /> */}
       <Stack.Screen
-        name="CreateAccount"
-        component={CreateAccountScreen}
-        options={{ headerTitle: "Create an account" }}
+        name="AuthScreen"
+        component={AuthScreen}
+        // options={{ headerTitle: "Create an account" }}
       />
     </Stack.Navigator>
   );
@@ -85,11 +86,11 @@ const HomeScreenFlow = () => {
         component={askEmotion}
         options={{ headerShown: false }}
       />
-      {/* <Stack.Screen
+      <Stack.Screen
         name="askReason"
         component={askReason}
         options={{ headerShown: false }}
-      /> */}
+      />
     </Stack.Navigator>
   );
 };

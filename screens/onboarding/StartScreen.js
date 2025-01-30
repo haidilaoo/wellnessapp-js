@@ -21,14 +21,14 @@ const StartScreen = ({ navigation }) => {
         </Text>
         <View style={[{ marginBottom: 48 }]}></View>
         <Button
-          title="Create an Account"
-          onPress={() => navigation.navigate("CreateAccount")}
+          title="Create an account"
+          onPress={() => navigation.navigate("AuthScreen", { mode: "signup" })}
           variant="primary"
         />
         <View style={globalStyles.marginBottomBase}></View>
         <Button
           title="Login"
-          onPress={() => navigation.navigate("Login")}
+          onPress={() => navigation.navigate("AuthScreen", { mode: "login" })}
           variant="secondary"
           textColor={COLORS.black}
         />

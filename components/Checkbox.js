@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
   },
   selectedBtn: {
-    backgroundColor: COLORS.secondary,
+    backgroundColor: COLORS.tertiary,
     borderColor: COLORS.primary,
     borderWidth: 1,
   },

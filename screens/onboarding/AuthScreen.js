@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useLayoutEffect } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 // import { TextInput } from "react-native-gesture-handler";
 import { TextInput, Provider as PaperProvider } from "react-native-paper"; //using this instead of native TextInput as this has built in support for floating labels
@@ -63,15 +63,16 @@ const AuthScreen = ({
             onChangeText={setPassword}
             secureTextEntry
           ></TextInput>
-          {/* <View style={globalStyles.marginBottom8}></View> */}
-          {/* <TextInput
+          {!isLogin && (
+          <TextInput
             label="Confirm password"
             mode="outlined"
-            style={globalStyles.textInput}
+            style={[globalStyles.textInput, {marginTop: 8,}]}
             theme={{
               roundness: 16,
             }}
-          ></TextInput> */}
+          />)}
+          
           <Text style={[{ margin: 32, alignSelf: "center" }]}>or</Text>
           <Button
             title="Continue with Google"
@@ -86,7 +87,7 @@ const AuthScreen = ({
         </View>
         <View>
           <Button
-            title={isLogin ? "Login" : "Sign Up"}
+            title={isLogin ? "Login" : "Sign up"}
             onPress={handleAuthentication}
           />
 
@@ -96,7 +97,7 @@ const AuthScreen = ({
               onPress={() => setIsLogin(!isLogin)}
             >
               {isLogin
-                ? "Need an account? Sign Up"
+                ? "Need an account? Sign up"
                 : "Already have an account? Login"}
             </Text>
           </View>
@@ -116,12 +117,19 @@ const AuthenticatedScreen = ({ user, handleAuthentication }) => {
   );
 };
 
-export default App = () => {
+export default App = ({route}) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [user, setUser] = useState(null); // Track user authentication state
-  const [isLogin, setIsLogin] = useState(true);
+  const {mode} = route.params || {}; // || {}; accounts for if mode is undefined
+  //TO RENDER IF LOGIN UI OR SIGN UP UI DEPENDING ON BUTTON CLICKED
+  const [isLogin, setIsLogin] = useState(route.params?.mode === "login"); //set to true if mode=login
   const navigation = useNavigation(); // Access navigation
+
+  //TO CHANGE HEADER TITLE DYNAMICALLY
+  useLayoutEffect(() => {
+    navigation.setOptions({ title: isLogin ? "Login" : "Create an account" });
+  }, [isLogin]);
 
   const auth = getAuth(app);
   useEffect(() => {

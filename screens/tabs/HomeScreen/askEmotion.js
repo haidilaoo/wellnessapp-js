@@ -6,24 +6,24 @@ import {
   ScrollView,
   Dimensions,
 } from "react-native";
-import { TextInput, Provider as PaperProvider } from "react-native-paper";
+import { Provider as PaperProvider } from "react-native-paper";
 
 import { COLORS, globalStyles, theme } from "../../../globalStyles";
 import Button from "../../../components/Button";
 import React, { useState, useRef } from "react";
 // import Slider from "@react-native-community/slider";
 import { Slider } from "@rneui/themed";
-import { useSafeAreaFrame } from "react-native-safe-area-context";
-export default function askEmotion() {
 
+
+export default function askEmotion({navigation}) {
   const [sliderValue, setSliderValue] = useState(0);
   const [contentWidth, setContentWidth] = useState(0);
   // const [scrollValue, setScrollValue] = useState(0);
   const scrollViewRef = useRef(null);
-  const windowWidth = Dimensions.get('window').width;
+  const windowWidth = Dimensions.get("window").width;
 
-   // Function to handle slider change
-   const handleSliderChange = (value) => {
+  // Function to handle slider change
+  const handleSliderChange = (value) => {
     setSliderValue(value);
     const offsetX = (value / 100) * (contentWidth - windowWidth - 32); // Adjust for paddingHorizontal
     // Scroll the ScrollView to the new position based on the slider value
@@ -33,17 +33,17 @@ export default function askEmotion() {
   // Function to handle scrollview change
   const handleScrollChange = (event) => {
     const offsetX = event.nativeEvent.contentOffset.x;
-    const newValue = Math.round((offsetX / (contentWidth -windowWidth - 32)) * 100);
+    const newValue = Math.round(
+      (offsetX / (contentWidth - windowWidth - 32)) * 100
+    );
     setSliderValue(newValue);
-  }
+  };
 
   // Function to measure content width
   const handleContentSizeChange = (width) => {
     setContentWidth(width);
   };
 
-
-  
   return (
     <PaperProvider theme={theme}>
       <View style={[globalStyles.container, globalStyles.spaceBetween]}>
@@ -61,7 +61,7 @@ export default function askEmotion() {
               Careot will give suggestions & insights {"\n"} based on your mood
             </Text>
           </View>
-          <View style={[{ marginVertical: 48, marginHorizontal: -16 }]}>
+          <View style={[{ marginTop: 48, marginBottom: 24, marginHorizontal: -16 }]}>
             <ScrollView
               horizontal={true}
               contentContainerStyle={{ paddingHorizontal: 16 }}
@@ -107,7 +107,6 @@ export default function askEmotion() {
                   }}
                   resizeMode="contain"
                 />
-              
               </View>
             </ScrollView>
           </View>
@@ -131,14 +130,17 @@ export default function askEmotion() {
               trackStyle={{ height: 10, borderRadius: 20 }}
               value={sliderValue}
               onValueChange={handleSliderChange}
-              
             />
+            <View style={{flexDirection: 'row', justifyContent: 'space-between', marginBottom: 48}}>
+            <Text style={ globalStyles.smallText}>Low moods</Text>
+            <Text style={ globalStyles.smallText}>Good moods</Text>
+            </View>
           </View>
         </View>
         <Button
           title="Select mood"
           style={{ alignItems: "flex-start" }}
-          onPress={() => navigation.navigate("FinishOnboarding")}
+          onPress={() => navigation.navigate("askReason")}
         />
       </View>
     </PaperProvider>
