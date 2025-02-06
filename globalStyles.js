@@ -161,6 +161,10 @@ export const globalStyles = StyleSheet.create({
     // borderColor: COLORS.borderDefault,
     // borderWidth: 1,
   },
+
+  disabled: {
+    opacity: 0.5,
+  },
 });
 
 export { COLORS, SIZES };

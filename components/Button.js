@@ -15,16 +15,21 @@ const Button = ({
   imageSize = 24,
   imageStyle,
   style,
-  
+  state,
 }) => {
   const buttonStyles =
     variant === "primary" ? styles.primaryBtn : styles.secondaryBtn;
   const buttonTextColor =
     textColor || (variant === "primary" ? COLORS.white : COLORS.black);
+  
+    const disabledStyles = 
+    state === false ? styles.disabled : null;
+
+    console.log("Button state:", state);  // Logs whenever Button renders
 
   return (
-    <TouchableOpacity onPress={onPress} style={style}>
-      <View style={[styles.btn, buttonStyles]}>
+    <TouchableOpacity onPress={state === false ? null: onPress} style={style}>
+      <View style={[styles.btn, buttonStyles, disabledStyles]}>
         {iconName && <Icon name={iconName} size={iconSize} color={iconColor} />}
         {imageSource && (
           <Image
@@ -59,7 +64,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
-  },
+  }, 
   primaryBtn: {
     backgroundColor: COLORS.primary,
   },
@@ -80,6 +85,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: "center",
     lineHeight: 16 * 1.4, // 140% of the font size
+  },
+  disabled: {
+    opacity: 0.5,
   },
 });
 

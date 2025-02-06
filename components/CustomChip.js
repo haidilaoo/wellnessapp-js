@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Chip } from "react-native-paper";
 import { COLORS, globalStyles } from "../globalStyles";
 
-const CustomChip = ({ label }) => {
+const CustomChip = ({ label, onPress }) => {
     const [selected, setSelected] = useState(false);
   
     return (
@@ -12,7 +12,7 @@ const CustomChip = ({ label }) => {
         showSelectedOverlay={true}
         mode="outlined"
         selected={selected}
-        onPress={() => setSelected(!selected)}
+        onPress={() =>{onPress(label); setSelected(!selected);}}
         style={{
           backgroundColor: selected ? COLORS.primary : "transparent", // ✅ Change fill color             
         //   borderWidth: selected ? 0 : 1, // Hide border when selected

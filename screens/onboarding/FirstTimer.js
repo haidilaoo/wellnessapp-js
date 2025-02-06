@@ -12,14 +12,19 @@ import Button from "../../components/Button";
 import Checkbox from "../../components/Checkbox";
 
 //DATABASE
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, setDoc, doc } from "firebase/firestore";
 import { db } from "../../firebaseConfig";
+import { getAuth } from "firebase/auth"; // Import for Firebase authentication
 
 export default function FirstTimer({ route, navigation }) {
   // const { user, handleAuthentication } = route.params; // Extract parameters
   const screenHeight = Dimensions.get("window").height;
   const [checkboxOptions, setCheckboxOptions] = useState([]);
-  
+  const [checkedStates, setCheckedStates] = useState(
+    new Array(checkboxOptions.length).fill(false)
+  );
+  const [buttonState, setButtonState] = useState(false);
+
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
@@ -35,7 +40,38 @@ export default function FirstTimer({ route, navigation }) {
 
     fetchQuestions();
   }, []);
+
+  const handleButtonChange = (index, isChecked) => {
+    // Enable button if at least one checkbox is checked
+    const updatedStates = [...checkedStates];
+    updatedStates[index] = isChecked; // Update the state of the checkbox
+    setCheckedStates(updatedStates);
+    // Enable button if at least one checkbox is checked, otherwise disable it
+    setButtonState(updatedStates.includes(true));
+    console.log(buttonState);
+  };
+
+  //to be called when user onPress continue button with navigate
+  const insertOptionToDatabase = async () => {
+    const userUid = getAuth().currentUser.uid
+
+    // Get the selected options
+    const selectedOptions = checkboxOptions.filter((_, index) => checkedStates[index]);
+    
+    try {
+      // Save selected options to the user's document in Firestore
+      await setDoc(doc(db, "users", userUid), {
+        selection: selectedOptions, // Save selected options as an array
+      }, {merge: true} // Merge with existing data, preventing overwriting
+    );
+      console.log("Selected options saved to database");
+    }catch (error) {
+      console.error("Error saving selected options to database:", error);
+    }
+  };
+
   
+
   return (
     // <View style={styles.container}>
     //   <Text style={styles.title}>Welcome</Text>
@@ -59,7 +95,11 @@ export default function FirstTimer({ route, navigation }) {
           <ScrollView style={[{ height: screenHeight * 0.4 }]}>
             <View style={{ flex: 1, gap: 10 }}>
               {checkboxOptions.map((option, index) => (
-                <Checkbox key={index} title={option} />
+                <Checkbox
+                   key={index}
+                  title={option}
+                  onPress={(isChecked) => handleButtonChange(index, isChecked)}
+                />
               ))}
             </View>
           </ScrollView>
@@ -68,7 +108,11 @@ export default function FirstTimer({ route, navigation }) {
       <Button
         title="Continue"
         style={{ alignItems: "flex-start" }}
-        onPress={() => navigation.navigate("CreateName")}
+        state={buttonState}
+        onPress={() => {
+          insertOptionToDatabase(); // Call your function to save data to the database
+          navigation.navigate("CreateName"); // Navigate to the "CreateName" screen
+        }}
       />
     </View>
   );

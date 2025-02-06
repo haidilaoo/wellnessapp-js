@@ -5,22 +5,37 @@ import {
   Image,
   ScrollView,
   Dimensions,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
 import { Provider as PaperProvider } from "react-native-paper";
 
 import { COLORS, globalStyles, theme } from "../../../globalStyles";
 import Button from "../../../components/Button";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 // import Slider from "@react-native-community/slider";
 import { Slider } from "@rneui/themed";
 
+//DATABASE
+import { getAuth } from "firebase/auth";
+import { setDoc, doc } from "firebase/firestore";
+import { db } from "../../../firebaseConfig";
 
-export default function askEmotion({navigation}) {
+import EmotionButton from "../../../components/EmotionButton";
+
+export default function askEmotion({ navigation }) {
   const [sliderValue, setSliderValue] = useState(0);
   const [contentWidth, setContentWidth] = useState(0);
+  const [selectedEmotion, setSelectedEmotion] = useState(null);
+
   // const [scrollValue, setScrollValue] = useState(0);
   const scrollViewRef = useRef(null);
   const windowWidth = Dimensions.get("window").width;
+
+  const handleBtnState = (state) => {
+    setEmotionBtnState(!state);
+    console.log("btn clicked");
+  };
 
   // Function to handle slider change
   const handleSliderChange = (value) => {
@@ -44,6 +59,20 @@ export default function askEmotion({navigation}) {
     setContentWidth(width);
   };
 
+    const insertEmotionToDatabase = async () => {
+      const userUid = getAuth().currentUser.uid
+      const emotion = selectedEmotion
+  
+      try {
+        await setDoc(doc(db, "users", userUid), {
+          emotion: emotion,
+        }, {merge: true}
+      );
+      console.log("emotion saved to database"); } catch (error) {
+        console.error("error saving emotion to database:", error);
+      }
+    }
+
   return (
     <PaperProvider theme={theme}>
       <View style={[globalStyles.container, globalStyles.spaceBetween]}>
@@ -61,7 +90,9 @@ export default function askEmotion({navigation}) {
               Careot will give suggestions & insights {"\n"} based on your mood
             </Text>
           </View>
-          <View style={[{ marginTop: 48, marginBottom: 24, marginHorizontal: -16 }]}>
+          <View
+            style={[{ marginTop: 48, marginBottom: 24, marginHorizontal: -16 }]}
+          >
             <ScrollView
               horizontal={true}
               contentContainerStyle={{ paddingHorizontal: 16 }}
@@ -71,41 +102,30 @@ export default function askEmotion({navigation}) {
               onScroll={handleScrollChange}
             >
               <View style={[globalStyles.gap32, globalStyles.row]}>
-                <Image
-                  source={require("../../../assets/emotion-joyful.png")}
-                  style={{
-                    height: 127, // Fixed height
-                    width: undefined, // Let the width adjust based on the aspect ratio
-                    aspectRatio: 1, // Maintain a 1:1 ratio
+               
+                <EmotionButton
+                  title="meh"
+                  emotion="meh"
+                  state={selectedEmotion === "meh"}
+                  onPress={() => {
+                    setSelectedEmotion("meh")
                   }}
-                  resizeMode="contain"
                 />
-                <Image
-                  source={require("../../../assets/emotion-joyful.png")}
-                  style={{
-                    height: 127, // Fixed height
-                    width: undefined, // Let the width adjust based on the aspect ratio
-                    aspectRatio: 1, // Maintain a 1:1 ratio
+                <EmotionButton
+                  title="silly"
+                  emotion="silly"
+                  state={selectedEmotion === "silly"}
+                  onPress={() => {
+                    setSelectedEmotion("silly")
                   }}
-                  resizeMode="contain"
                 />
-                <Image
-                  source={require("../../../assets/emotion-joyful.png")}
-                  style={{
-                    height: 127, // Fixed height
-                    width: undefined, // Let the width adjust based on the aspect ratio
-                    aspectRatio: 1, // Maintain a 1:1 ratio
+                 <EmotionButton
+                  title="joyful"
+                  emotion="joyful"
+                  state={selectedEmotion ==="joyful"}
+                  onPress={() => {
+                    setSelectedEmotion("joyful")
                   }}
-                  resizeMode="contain"
-                />
-                <Image
-                  source={require("../../../assets/emotion-joyful.png")}
-                  style={{
-                    height: 127, // Fixed height
-                    width: undefined, // Let the width adjust based on the aspect ratio
-                    aspectRatio: 1, // Maintain a 1:1 ratio
-                  }}
-                  resizeMode="contain"
                 />
               </View>
             </ScrollView>
@@ -131,16 +151,22 @@ export default function askEmotion({navigation}) {
               value={sliderValue}
               onValueChange={handleSliderChange}
             />
-            <View style={{flexDirection: 'row', justifyContent: 'space-between', marginBottom: 48}}>
-            <Text style={ globalStyles.smallText}>Low moods</Text>
-            <Text style={ globalStyles.smallText}>Good moods</Text>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                marginBottom: 48,
+              }}
+            >
+              <Text style={globalStyles.smallText}>Low moods</Text>
+              <Text style={globalStyles.smallText}>Good moods</Text>
             </View>
           </View>
         </View>
         <Button
           title="Select mood"
-          style={{ alignItems: "flex-start" }}
-          onPress={() => navigation.navigate("askReason")}
+          style={[ {alignItems: "flex-start"}, selectedEmotion === null? globalStyles.disabled : null]}
+          onPress={() => {insertEmotionToDatabase(); navigation.navigate("askReason");}}
         />
       </View>
     </PaperProvider>

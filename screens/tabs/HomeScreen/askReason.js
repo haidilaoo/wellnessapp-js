@@ -5,9 +5,28 @@ import { COLORS, globalStyles, theme } from "../../../globalStyles";
 import Button from "../../../components/Button";
 import CustomChip from "../../../components/CustomChip";
 
-export default function askReason({ memo, setMemo, navigation }) {
-  const [selected, setSelected] = useState(false);
+//DATABASE
+import { getAuth } from "firebase/auth";
+import { setDoc, doc } from "firebase/firestore";
+import { db } from "../../../firebaseConfig";
 
+export default function askReason({ memo, setMemo, navigation }) {
+
+  const [selectedReason, setSelectedReason] = useState([]);
+   const insertReasonToDatabase = async () => {
+        const userUid = getAuth().currentUser.uid
+        const reason = selectedReason
+    
+        try {
+          await setDoc(doc(db, "users", userUid), {
+            reason: reason,
+          }, {merge: true}
+        );
+        console.log("reasons saved to database"); } catch (error) {
+          console.error("error saving reasons to database:", error);
+        }
+      }
+  
   return (
     <PaperProvider theme={theme}>
       <View style={[globalStyles.container, globalStyles.spaceBetween]}>
@@ -33,15 +52,11 @@ export default function askReason({ memo, setMemo, navigation }) {
               globalStyles.row,
             ]}
           >
-            <CustomChip label="Chip 1" />
-            <CustomChip label="Chip 2" />
-            <CustomChip label="longggggggggg" />
-            <CustomChip label="Chip 2" />
-            <CustomChip label="Chip 2" />
-            <CustomChip label="Chip 1" />
-            <CustomChip label="Chip 2" />
-            <CustomChip label="testtttttt" />
-            <CustomChip label="Chip 2" />
+            <CustomChip label="Chip 1" onPress= {(label) =>{setSelectedReason(prevReasons => [...prevReasons, label]); }} />
+            <CustomChip label="Chip 2" onPress= {(label) =>{setSelectedReason(prevReasons => [...prevReasons, label]); }}/>
+            <CustomChip label="Chip 3" onPress= {(label) =>{setSelectedReason(prevReasons => [...prevReasons, label]);}} />
+            <CustomChip label="Chip 4" onPress= {(label) =>{setSelectedReason(prevReasons => [...prevReasons, label]);}} />
+            
           
           </View>
           <View style={{ marginTop: 24 }}>
@@ -60,7 +75,7 @@ export default function askReason({ memo, setMemo, navigation }) {
         <Button
           title="Done"
           style={{ alignItems: "flex-start" }}
-          onPress={() => navigation.navigate("FinishOnboarding")}
+          onPress={() => {insertReasonToDatabase(); navigation.navigate("FinishOnboarding");}}
         />
       </View>
     </PaperProvider>

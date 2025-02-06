@@ -16,9 +16,12 @@ import {
   signOut,
 } from "@firebase/auth";
 //TO PERSIST LOGIN DATA
-import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
-import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
+import { initializeAuth, getReactNativePersistence } from "firebase/auth";
+import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
 
+//FOR DATABASE FIRESTORE
+import { db } from "../../firebaseConfig";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAryoh-bO90naehPlcOwsahHDIBVHJ_pSM",
@@ -33,7 +36,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 //TO PERSIST LOGIN DATA
 const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(ReactNativeAsyncStorage)
+  persistence: getReactNativePersistence(ReactNativeAsyncStorage),
 });
 
 const AuthScreen = ({
@@ -184,8 +187,19 @@ export default App = ({ route }) => {
           if (!validateConfirmPassword()) {
             return; // Stop execution if validation fails
           }
-          await createUserWithEmailAndPassword(auth, email, password);
-          console.log("User created successfully!");
+          const userCredential = await createUserWithEmailAndPassword(
+            auth,
+            email,
+            password
+          );
+          const user = userCredential.user;
+          // Store additional user details in Firestore
+          await setDoc(doc(db, "users", user.uid), {
+            // name: name,
+            email: email,
+            createdAt: new Date(),
+          });
+          console.log("User registered and added to Firestore:", user.uid);
         }
       }
     } catch (error) {
@@ -193,25 +207,26 @@ export default App = ({ route }) => {
     }
   };
 
-  // Call this function instead of `navigation.navigate` when user needs to go to FirstTimer
-  const navigateToFirstTimer = () => {
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [
-          {
-            name: "OnboardingFlow",
-            state: {
-              routes: [
-                { name: "FirstTimer", params: { user, handleAuthentication } },
-              ],
+  //Move navigation stuff inside useEffect so that it runs after the component renders.if not have error
+  useEffect(() => {
+    if (user) {
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [
+            {
+              name: "OnboardingFlow",
+              state: {
+                routes: [
+                  { name: "FirstTimer", params: { user, handleAuthentication } },
+                ],
+              },
             },
-          },
-        ],
-      })
-    );
-  };
-
+          ],
+        })
+      );
+    }
+  }, [user, navigation, handleAuthentication]); // Run effect when user changes
   return (
     <ScrollView contentContainerStyle={styles.authContainer}>
       {user ? (
@@ -220,7 +235,8 @@ export default App = ({ route }) => {
         //   user={user}
         //   handleAuthentication={handleAuthentication}
         // />
-        navigateToFirstTimer() // Navigate to FirstTimer and reset the stack
+     
+      null
       ) : (
         // Show sign-in or sign-up form if user is not authenticated
         <AuthScreen

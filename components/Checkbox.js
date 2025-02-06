@@ -14,6 +14,7 @@ const Checkbox = ({
   imageSource,
   imageSize = 24,
   imageStyle,
+ 
 }) => {
   const [checked, setChecked] = useState(false);
   const [iconName, setIconName] = useState("square-o"); // default unchecked icon
@@ -24,10 +25,12 @@ const Checkbox = ({
       setChecked(true);
       setIconName("check-square"); // set checked icon
       setIconColor(COLORS.primary); // set color when checked
+      onPress(true); //set state of component to be passed to parent component when used
     } else {
       setChecked(false);
       setIconName("square-o"); // set unchecked icon (FontAwesome v4)
       setIconColor(COLORS.borderDefault); // set color when unchecked
+      onPress(false); //set state of component to be passed to parent component when used
     }
   };
 
