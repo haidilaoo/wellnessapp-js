@@ -35,9 +35,9 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 //TO PERSIST LOGIN DATA
-const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(ReactNativeAsyncStorage),
-});
+// const auth = initializeAuth(app, {
+//   persistence: getReactNativePersistence(ReactNativeAsyncStorage),
+// });
 
 const AuthScreen = ({
   email,

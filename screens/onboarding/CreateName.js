@@ -29,8 +29,8 @@ export default function CreateName({ navigation }) {
         nickname: name,
       }, {merge: true}
     );
-    console.log("name saved to database"); } catch (error) {
-      console.error("error saving nickname to database:", error);
+    console.log("Name saved to database"); } catch (error) {
+      console.error("Error saving nickname to database:", error);
     }
   }
 

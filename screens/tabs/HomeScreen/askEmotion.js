@@ -18,7 +18,14 @@ import { Slider } from "@rneui/themed";
 
 //DATABASE
 import { getAuth } from "firebase/auth";
-import { setDoc, doc } from "firebase/firestore";
+import {
+  setDoc,
+  doc,
+  getDoc,
+  increment,
+  serverTimestamp,
+  updateDoc,
+} from "firebase/firestore";
 import { db } from "../../../firebaseConfig";
 
 import EmotionButton from "../../../components/EmotionButton";
@@ -59,19 +66,41 @@ export default function askEmotion({ navigation }) {
     setContentWidth(width);
   };
 
-    const insertEmotionToDatabase = async () => {
-      const userUid = getAuth().currentUser.uid
-      const emotion = selectedEmotion
-  
-      try {
-        await setDoc(doc(db, "users", userUid), {
-          emotion: emotion,
-        }, {merge: true}
+  const insertEmotionToDatabase = async () => {
+    const userUid = getAuth().currentUser.uid;
+    const emotion = selectedEmotion;
+
+    try {
+      // 1. Save the latest emotion as a field in the "users" collection
+      await setDoc(
+        doc(db, "users", userUid),
+        { currentEmotion: emotion },
+        { merge: true }
       );
-      console.log("emotion saved to database"); } catch (error) {
-        console.error("error saving emotion to database:", error);
+      console.log("Emotion saved to database");
+
+      //2. Update emotion_tally subcollection
+      const emotionRef = doc(db, "users", userUid, "emotion_tally", emotion);
+      const emotionDoc = await getDoc(emotionRef); // check if emotion alr exists as doc
+
+      if (emotionDoc.exists()) {
+        await updateDoc(emotionRef, {
+          count: increment(1),
+          last_updated: serverTimestamp(),
+        });
+      } else {
+        await setDoc(emotionRef, {
+          count: 1,
+          last_updated: serverTimestamp(),
+          reasons: [], // Initialize reasons array
+        });
       }
+      console.log("Emotion tally updated");
+
+    } catch (error) {
+      console.error("Error saving emotion to database:", error);
     }
+  };
 
   return (
     <PaperProvider theme={theme}>
@@ -102,13 +131,12 @@ export default function askEmotion({ navigation }) {
               onScroll={handleScrollChange}
             >
               <View style={[globalStyles.gap32, globalStyles.row]}>
-               
                 <EmotionButton
                   title="meh"
                   emotion="meh"
                   state={selectedEmotion === "meh"}
                   onPress={() => {
-                    setSelectedEmotion("meh")
+                    setSelectedEmotion("meh");
                   }}
                 />
                 <EmotionButton
@@ -116,15 +144,15 @@ export default function askEmotion({ navigation }) {
                   emotion="silly"
                   state={selectedEmotion === "silly"}
                   onPress={() => {
-                    setSelectedEmotion("silly")
+                    setSelectedEmotion("silly");
                   }}
                 />
-                 <EmotionButton
+                <EmotionButton
                   title="joyful"
                   emotion="joyful"
-                  state={selectedEmotion ==="joyful"}
+                  state={selectedEmotion === "joyful"}
                   onPress={() => {
-                    setSelectedEmotion("joyful")
+                    setSelectedEmotion("joyful");
                   }}
                 />
               </View>
@@ -165,8 +193,14 @@ export default function askEmotion({ navigation }) {
         </View>
         <Button
           title="Select mood"
-          style={[ {alignItems: "flex-start"}, selectedEmotion === null? globalStyles.disabled : null]}
-          onPress={() => {insertEmotionToDatabase(); navigation.navigate("askReason");}}
+          style={[
+            { alignItems: "flex-start" },
+            selectedEmotion === null ? globalStyles.disabled : null,
+          ]}
+          onPress={() => {
+            insertEmotionToDatabase();
+            navigation.navigate("askReason");
+          }}
         />
       </View>
     </PaperProvider>
