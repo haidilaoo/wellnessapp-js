@@ -96,11 +96,19 @@ const HomeScreenFlow = () => {
 };
 
 // Main App Tabs (Logged-In)
-const MainApp = () => {
+const MainAppFlow = () => {
   return (
     <Tab.Navigator>
-      <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Therapist" component={TherapistScreen} />
+      <Tab.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{ headerShown: false }}
+      />
+      <Tab.Screen
+        name="Therapist"
+        component={TherapistScreen}
+        options={{ headerShown: false }}
+      />
     </Tab.Navigator>
   );
 };
@@ -118,6 +126,7 @@ const RootNavigator = () => {
         }}
       >
         {/* Authentication Flow */}
+        
         <Stack.Screen
           name="AuthFlow"
           component={AuthFlow}
@@ -135,9 +144,10 @@ const RootNavigator = () => {
           component={HomeScreenFlow}
           options={{ headerShown: false }}
         />
+       
         <Stack.Screen
-          name="MainApp"
-          component={MainApp}
+          name="MainAppFlow"
+          component={MainAppFlow}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

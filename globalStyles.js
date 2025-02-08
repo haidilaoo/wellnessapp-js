@@ -68,6 +68,9 @@ export const globalStyles = StyleSheet.create({
   },
 
   //SPACING
+  gap4: {
+    gap: 4,
+  },
   gap8: {
     gap: 8,
   },
@@ -122,7 +125,15 @@ export const globalStyles = StyleSheet.create({
     fontFamily: "Inter-Regular",
     fontSize: 16,
     color: COLORS.blackSecondary,
-    textAlign: "center",
+    // textAlign: "center",
+    lineHeight: 16 * 1.4, // 140% of the font size
+  },
+
+  pBold: {
+    fontFamily: "Inter-Bold",
+    fontSize: 16,
+    color: COLORS.black,
+    // textAlign: "center",
     lineHeight: 16 * 1.4, // 140% of the font size
   },
 
@@ -145,6 +156,14 @@ export const globalStyles = StyleSheet.create({
     fontFamily: "Inter-Bold",
     fontSize: 24,
     color: COLORS.black,
+    lineHeight: 24 * 1.2, 
+  },
+
+  h3: {
+    fontFamily: "Inter-Bold",
+    fontSize: 20,
+    color: COLORS.black,
+    lineHeight: 20 * 1.4, 
   },
 
   textCenter: {

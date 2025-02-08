@@ -89,7 +89,7 @@ export default function FirstTimer({ route, navigation }) {
           <Text style={[globalStyles.h2, globalStyles.textCenter]}>
             What’s on your mind?
           </Text>
-          <Text style={globalStyles.p}>I want to...</Text>
+          <Text style={[globalStyles.p, {textAlign: "center",}]}>I want to...</Text>
         </View>
         <View style={[{ marginTop: 32 }, globalStyles.gap10]}>
           <ScrollView style={[{ height: screenHeight * 0.4 }]}>

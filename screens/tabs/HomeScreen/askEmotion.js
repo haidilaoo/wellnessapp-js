@@ -115,7 +115,7 @@ export default function askEmotion({ navigation }) {
             <Text style={[globalStyles.h2, globalStyles.textCenter]}>
               How are you feeling today?
             </Text>
-            <Text style={globalStyles.p}>
+            <Text style={[globalStyles.p, {textAlign: "center",}]}>
               Careot will give suggestions & insights {"\n"} based on your mood
             </Text>
           </View>

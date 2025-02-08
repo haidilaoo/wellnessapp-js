@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, Image, ScrollView } from "react-native";
+import { View, Text, StyleSheet, Image, ScrollView, TouchableWithoutFeedback, Keyboard } from "react-native";
 import { TextInput, Provider as PaperProvider } from "react-native-paper";
 import { COLORS, globalStyles, theme } from "../../globalStyles";
 import Button from "../../components/Button";
@@ -36,6 +36,7 @@ export default function CreateName({ navigation }) {
 
   return (
     <PaperProvider theme={theme}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View style={[globalStyles.container, globalStyles.spaceBetween]}>
         <Image
           source={require("../../assets/topbanner-image.png")}
@@ -47,7 +48,7 @@ export default function CreateName({ navigation }) {
             <Text style={[globalStyles.h2, globalStyles.textCenter]}>
               What should I call you?
             </Text>
-            <Text style={globalStyles.p}>
+            <Text style={[globalStyles.p, {textAlign: "center",}]}>
               This will be the name displayed to the community when you post or
               comment
             </Text>
@@ -74,6 +75,7 @@ export default function CreateName({ navigation }) {
           onPress={() => {insertNameToDatabase(); navigation.navigate("FinishOnboarding"); }}
         />
       </View>
+      </TouchableWithoutFeedback>
     </PaperProvider>
   );
 }

@@ -55,7 +55,7 @@ export default function CreateName({ nickname, setNickname, navigation }) {
           <Text style={[globalStyles.h2, globalStyles.textCenter]}>
             All set!
           </Text>
-          <Text style={globalStyles.p}>
+          <Text style={[globalStyles.p, {textAlign: "center",}]}>
             Your journey to a happier, healthier life starts now.
           </Text>
         </View>

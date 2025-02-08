@@ -20,17 +20,37 @@ import {
   doc,
   updateDoc,
   getDoc,
-  arrayUnion,
   count,
   increment,
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "../../../firebaseConfig";
+import { CommonActions, } from "@react-navigation/native";
 
-export default function askReason({ memo, setMemo, navigation }) {
+export default function askReason({navigation}) {
   const [selectedReason, setSelectedReason] = useState([]);
+  const [memo, setMemo] = useState(null);
+  const userUid = getAuth().currentUser.uid;
+  
+  const insertMemoToDatabase = async () => {
+    try {
+      await setDoc(doc(db, "users", userUid),
+    {
+      memo: memo,
+    }, {
+      merge: true
+    });
+
+    console.log('Memo inserted into database.');
+    } catch (error) {
+      console.error("Error inserting Memo into database: ", error);
+    }
+
+  }
+
+
   const insertReasonToDatabase = async () => {
-    const userUid = getAuth().currentUser.uid;
+    // const userUid = getAuth().currentUser.uid;
     const reasons = selectedReason;
    
     try {
@@ -99,6 +119,24 @@ export default function askReason({ memo, setMemo, navigation }) {
     } catch (error) {
       console.error("Error saving reasons to database:", error);
     }
+  };
+
+
+  //NAVIGATE TO MAINAPP FLOW
+const navigateToMainScreen = () => {
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [
+          {
+            name: "MainAppFlow",
+            state: {
+              routes: [{ name: "Home" }],
+            },
+          },
+        ],
+      })
+    );
   };
 
   return (
@@ -233,7 +271,8 @@ export default function askReason({ memo, setMemo, navigation }) {
               style={{ alignItems: "flex-start" ,}}
               onPress={() => {
                 insertReasonToDatabase();
-                navigation.navigate("FinishOnboarding");
+                insertMemoToDatabase();
+                navigateToMainScreen();
               }}
             />
           </View>
