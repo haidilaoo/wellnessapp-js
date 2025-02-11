@@ -15,7 +15,7 @@ const QuestButton = ({title, imageSource, category}) => {
                     <Text style={globalStyles.p}>{category}</Text>
                   </View>
                   <Image
-                    source={require("../assets/quest-image.png")}
+                    source={require("../assets/tick-btn.png")}
                     style={{ width: 46, aspectRatio: 1 }}
                   ></Image>
                 </View>

@@ -6,11 +6,21 @@ import QuestButton from "../../components/QuestButton";
 import Icon from "react-native-vector-icons/Feather";
 
 //DATABASE
-import { collection, getDocs, setDoc, doc, getDoc } from "firebase/firestore";
-import { db } from "../../firebaseConfig";
+import {
+  collection,
+  getDocs,
+  setDoc,
+  doc,
+  getDoc,
+  Firestore,
+} from "firebase/firestore";
+import { db, firestore } from "../../firebaseConfig";
 import { getAuth } from "firebase/auth"; // Import for Firebase authentication
 import { TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import useDailyReset from "./useDailyReset";
+import { Button } from "react-native-elements";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function HomeScreen() {
   // const [meditateQuest, setMeditateQuest] = useState([]);
@@ -19,18 +29,22 @@ export default function HomeScreen() {
   // const [sleepQuest, setSleepQuest] = useState([]);
   const [quests, setQuests] = useState([]); // Stores selected 6 quests
   const [currentEmotion, setCurrentEmotion] = useState(null);
+  
   const userUid = getAuth().currentUser.uid;
+  const emotion = useDailyReset(userUid); // This hook will reset and retrieve currentEmotion daily
 
   useEffect(() => {
     const fetchQuests = async () => {
+      const userDoc = await getDoc(doc(db, "users", userUid));
       try {
         // Fetch user's currentEmotion
-        const userDoc = await getDoc(doc(db, "users", userUid));
 
         const emotion = userDoc.data().currentEmotion;
-        setCurrentEmotion(emotion);
-        console.log('Current Emotion: ', currentEmotion);
+        console.log("Current Emotion:", emotion);
 
+        setCurrentEmotion(emotion);
+        console.log("Current Emotion: ", currentEmotion);
+     
         // const emotion = "joyful"; // Replace this with dynamic emotion if needed
         const docRef = doc(db, "quests", emotion); // Reference specific emotion document
         const docSnap = await getDoc(docRef);
@@ -80,11 +94,10 @@ export default function HomeScreen() {
 
           // Shuffle and select 4 from non-sleep categories
           const selectedNonSleep = shuffleAndSelect(nonSleepQuests, 4);
-           // Shuffle and select up to 2 sleep quests
-        const selectedSleep = shuffleAndSelect(sleepQuests, 2);
-         // Ensure sleep quests always appear at the end
-         setQuests([...selectedNonSleep, ...selectedSleep]);
-          
+          // Shuffle and select up to 2 sleep quests
+          const selectedSleep = shuffleAndSelect(sleepQuests, 2);
+          // Ensure sleep quests always appear at the end
+          setQuests([...selectedNonSleep, ...selectedSleep]);
         } else {
           console.warn(`No document found for emotion: ${emotion}`);
         }
@@ -95,7 +108,23 @@ export default function HomeScreen() {
 
     fetchQuests();
   }, []);
-
+  // Manually trigger reset button for testing
+  const handleManualReset = async () => {
+    try {
+      const today = new Date().toLocaleDateString();
+      // Force the reset logic to run, regardless of the date
+      await AsyncStorage.setItem("lastResetDate", today); // Update stored date to trigger reset
+      await setDoc(
+        doc(db, "users", userUid),
+        { currentEmotion: null },
+        { merge: true }
+      );
+      setCurrentEmotion(null); // Reset local state
+      console.log("Manually reset currentEmotion to null");
+    } catch (error) {
+      console.error("Error manually resetting emotion:", error);
+    }
+  };
   // Function to shuffle array and pick `n` items
   const shuffleAndSelect = (array, n) => {
     const shuffled = array.sort(() => Math.random() - 0.5); // Shuffle
@@ -117,19 +146,49 @@ export default function HomeScreen() {
         />
         <View style={[globalStyles.gap24, { marginTop: 250 }]}>
           <Text style={globalStyles.h3}>Today's quests</Text>
-           <TouchableOpacity style={styles.emotionContainer} onPress= {() => navigation.navigate("askEmotion")}>
-                          <View
-                            style={[
-                              { flexDirection: "row", justifyContent: "space-between", alignItems: 'center' },
-                            ]}
-                          >
-                            <View style={globalStyles.gap4}>
-                            <Text style={[globalStyles.smallText, {color: COLORS.white}]}>How was your day?</Text>
-                              <Text style={[globalStyles.pBold, {color: COLORS.white} ]}>Record your emotion today</Text>                             
-                            </View>
-                     <Icon name='chevron-right' size={24} color={COLORS.white} />
-                          </View>
-                        </TouchableOpacity>
+          <Button title="Manually Reset Emotion" onPress={handleManualReset} />
+          <TouchableOpacity
+            style={styles.emotionContainer}
+            onPress={() => navigation.navigate("askEmotion")}
+          >
+            <View
+              style={[
+                {
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                },
+              ]}
+            >
+              <View style={globalStyles.gap4}>
+                {currentEmotion ? (
+                  <>
+                    <Text
+                      style={[globalStyles.smallText, { color: COLORS.white }]}
+                    >
+                      Today's emotion
+                    </Text>
+                    <Text style={[globalStyles.pBold, { color: COLORS.white }]}>
+                      {currentEmotion.charAt(0).toUpperCase() +
+                        currentEmotion.slice(1)}
+                    </Text>
+                  </>
+                ) : (
+                  <>
+                    <Text
+                      style={[globalStyles.smallText, { color: COLORS.white }]}
+                    >
+                      How was your day?
+                    </Text>
+                    <Text style={[globalStyles.pBold, { color: COLORS.white }]}>
+                      Record your emotion today
+                    </Text>
+                  </>
+                )}
+              </View>
+              <Icon name="chevron-right" size={24} color={COLORS.white} />
+            </View>
+          </TouchableOpacity>
           <View style={globalStyles.gap16}>
             {/* {meditateQuest && meditateQuest.length > 0 ? (
               meditateQuest.map((quest, index) => (
@@ -160,7 +219,7 @@ export default function HomeScreen() {
               <Text>Loading or no quests available...</Text>
             )} */}
 
-            {quests.length > 0 ? (
+            {quests.length > 0 && currentEmotion !== null ? (
               quests.map((quest, index) => (
                 <QuestButton
                   key={index}

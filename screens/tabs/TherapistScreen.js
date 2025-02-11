@@ -27,6 +27,7 @@ const navigation = useNavigation();
           index: 0,
           routes: [{ name: 'AuthFlow' }],
         });}} title={'log out'}></Button>
+     
     </View>
   );
 }
