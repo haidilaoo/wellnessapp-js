@@ -3,6 +3,10 @@ import { View, Text, StyleSheet, Image, Dimensions } from "react-native";
 import { COLORS, globalStyles, theme } from "../../globalStyles";
 import Button from "../../components/Button";
 import { CommonActions } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getAuth } from "firebase/auth";
+import { doc, getFirestore, setDoc } from "firebase/firestore";
+import { db } from "../../firebaseConfig";
 
 export default function CreateName({ nickname, setNickname, navigation }) {
   const { width: screenWidth } = Dimensions.get("window");
@@ -10,6 +14,7 @@ export default function CreateName({ nickname, setNickname, navigation }) {
   const bannerWidth = Math.min(screenWidth);
 
   const navigateToHomeScreen = () => {
+   
     navigation.dispatch(
       CommonActions.reset({
         index: 0,
@@ -25,6 +30,23 @@ export default function CreateName({ nickname, setNickname, navigation }) {
     );
   };
 
+  const completeOnboarding = async () => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (user) {
+      try {
+        // Simulate Firestore operation
+        console.log("Updating onboarding state...");
+        await setDoc(doc(db, "users", user.uid), {
+          isOnboardingCompleted: true, 
+        }, { merge: true });
+      } catch (error) {
+        console.error('Error updating Firestore:', error);
+      }
+    } else {
+      console.error("No user found");
+    }
+  };
   return (
     <View style={[globalStyles.container, globalStyles.spaceBetween]}>
       <Image
@@ -68,7 +90,10 @@ export default function CreateName({ nickname, setNickname, navigation }) {
           bottom: 56 + 228,
           paddingHorizontal: 16,
         }}
-        onPress={navigateToHomeScreen}
+        onPress={async () => {
+          await completeOnboarding();
+          navigateToHomeScreen();
+        }}
       />
     </View>
   );

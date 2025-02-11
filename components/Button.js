@@ -25,7 +25,7 @@ const Button = ({
     const disabledStyles = 
     state === false ? styles.disabled : null;
 
-    console.log("Button state:", state);  // Logs whenever Button renders
+    // console.log("Button state:", state);  // Logs whenever Button renders
 
   return (
     <TouchableOpacity onPress={state === false ? null: onPress} style={style}>

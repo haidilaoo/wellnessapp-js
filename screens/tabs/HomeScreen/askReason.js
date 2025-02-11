@@ -129,14 +129,15 @@ const navigateToMainScreen = () => {
         index: 0,
         routes: [
           {
-            name: "MainAppFlow",
+            name: "HomeScreenFlow",
             state: {
-              routes: [{ name: "Home" }],
+              routes: [{ name: "MainAppFlow" }],
             },
           },
         ],
       })
     );
+    // navigation.navigate('MainAppFlow', { screen: 'HomeScreen' });
   };
 
   return (

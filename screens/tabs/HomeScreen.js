@@ -3,11 +3,14 @@ import { View, Text, StyleSheet, Image } from "react-native";
 import { COLORS, globalStyles } from "../../globalStyles";
 import { ScrollView } from "react-native-gesture-handler";
 import QuestButton from "../../components/QuestButton";
+import Icon from "react-native-vector-icons/Feather";
 
 //DATABASE
 import { collection, getDocs, setDoc, doc, getDoc } from "firebase/firestore";
 import { db } from "../../firebaseConfig";
 import { getAuth } from "firebase/auth"; // Import for Firebase authentication
+import { TouchableOpacity } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 
 export default function HomeScreen() {
   // const [meditateQuest, setMeditateQuest] = useState([]);
@@ -97,7 +100,7 @@ export default function HomeScreen() {
     const shuffled = array.sort(() => Math.random() - 0.5); // Shuffle
     return shuffled.slice(0, n); // Get first `n` items
   };
-
+  const navigation = useNavigation();
   return (
     <ScrollView
       contentContainerStyle={{ flexGrow: 1 }}
@@ -113,6 +116,19 @@ export default function HomeScreen() {
         />
         <View style={[globalStyles.gap24, { marginTop: 250 }]}>
           <Text style={globalStyles.h3}>Today's quests</Text>
+           <TouchableOpacity style={styles.emotionContainer} onPress= {() => navigation.navigate("askEmotion")}>
+                          <View
+                            style={[
+                              { flexDirection: "row", justifyContent: "space-between", alignItems: 'center' },
+                            ]}
+                          >
+                            <View style={globalStyles.gap4}>
+                            <Text style={[globalStyles.smallText, {color: COLORS.white}]}>How was your day?</Text>
+                              <Text style={[globalStyles.pBold, {color: COLORS.white} ]}>Record your emotion today</Text>                             
+                            </View>
+                     <Icon name='chevron-right' size={24} color={COLORS.white} />
+                          </View>
+                        </TouchableOpacity>
           <View style={globalStyles.gap16}>
             {/* {meditateQuest && meditateQuest.length > 0 ? (
               meditateQuest.map((quest, index) => (
@@ -162,12 +178,12 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  questContainer: {
-    backgroundColor: COLORS.white,
+  emotionContainer: {
+    backgroundColor: COLORS.primary,
     paddingHorizontal: 16,
     paddingVertical: 24,
     borderRadius: 16,
-    borderColor: COLORS.borderDefault,
-    borderWidth: 1,
+    // borderColor: COLORS.borderDefault,
+    // borderWidth: 1,
   },
 });

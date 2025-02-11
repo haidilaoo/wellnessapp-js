@@ -5,6 +5,9 @@ import { TextInput, Provider as PaperProvider } from "react-native-paper"; //usi
 import { COLORS, globalStyles, theme } from "../../globalStyles";
 import Button from "../../components/Button";
 import { useNavigation, CommonActions } from "@react-navigation/native"; // Import navigation hook
+// import { useUser } from "./UserContext";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 
 //AUTHENTICATION
 import { initializeApp } from "@firebase/app";
@@ -22,6 +25,7 @@ import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
 //FOR DATABASE FIRESTORE
 import { db } from "../../firebaseConfig";
 import { doc, setDoc, getDoc } from "firebase/firestore";
+import { useUser } from "./UserContext";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAryoh-bO90naehPlcOwsahHDIBVHJ_pSM",
@@ -35,9 +39,11 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 //TO PERSIST LOGIN DATA
-// const auth = initializeAuth(app, {
-//   persistence: getReactNativePersistence(ReactNativeAsyncStorage),
-// });
+const auth = initializeAuth(app, {
+  persistence: getReactNativePersistence(ReactNativeAsyncStorage),
+});
+
+// const userGlobal = useUser();
 
 const AuthScreen = ({
   email,
@@ -124,16 +130,6 @@ const AuthScreen = ({
   );
 };
 
-const AuthenticatedScreen = ({ user, handleAuthentication }) => {
-  return (
-    <View style={styles.authContainer}>
-      <Text style={styles.title}>Welcome</Text>
-      <Text style={styles.emailText}>{user.email}</Text>
-      <Button title="Logout" onPress={handleAuthentication} color="#e74c3c" />
-    </View>
-  );
-};
-
 export default App = ({ route }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -170,6 +166,7 @@ export default App = ({ route }) => {
     }
     return true;
   };
+  const { selection, currentEmotion } = useUser();
   const handleAuthentication = async () => {
     try {
       if (user) {
@@ -181,6 +178,19 @@ export default App = ({ route }) => {
         if (isLogin) {
           // Sign in (no need to check confirm password)
           await signInWithEmailAndPassword(auth, email, password);
+          console.log("selection:", selection);
+          console.log("currentEmotion:", currentEmotion);
+               
+          // if (selection === null) {
+          //   console.log('selection is null, navigating to OnboardingFlow');
+          //   navigation.navigate("OnboardingFlow", { screen: "FirstTimer" });
+          // } else if (currentEmotion === null) {
+          //   console.log('currentEmotion is null, navigating to askEmotion screen');
+          //   navigation.navigate("HomeScreenFlow", { screen: "askEmotion" });
+          // } else {
+          //   console.log('Both values present, navigating to HomeScreen');
+          //   navigation.navigate("HomeScreenFlow", { screen: "HomeScreen" });
+          // }
           console.log("User signed in successfully!");
         } else {
           // Sign up (validate confirm password)
@@ -198,8 +208,10 @@ export default App = ({ route }) => {
             // name: name,
             email: email,
             createdAt: new Date(),
+            isOnboardingCompleted: false, // Set onboarding status to false initially
           });
           console.log("User registered and added to Firestore:", user.uid);
+   
         }
       }
     } catch (error) {
@@ -207,37 +219,21 @@ export default App = ({ route }) => {
     }
   };
 
-  //Move navigation stuff inside useEffect so that it runs after the component renders.if not have error
   useEffect(() => {
-    if (user) {
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [
-            {
-              name: "OnboardingFlow",
-              state: {
-                routes: [
-                  { name: "FirstTimer", params: { user, handleAuthentication } },
-                ],
-              },
-            },
-          ],
-        })
-      );
-    }
-  }, [user, navigation, handleAuthentication]); // Run effect when user changes
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        console.log("User signed in:", user.uid);
+        // No need to navigate here—App.js will handle it
+      } else {
+        console.log("User not signed in - Staying on AuthScreen");
+      }
+    });
+
+    return unsubscribe; // Cleanup
+  }, [navigation]);
   return (
     <ScrollView contentContainerStyle={styles.authContainer}>
-      {user ? (
-        // Show user's email if user is authenticated
-        // <AuthenticatedScreen
-        //   user={user}
-        //   handleAuthentication={handleAuthentication}
-        // />
-     
-      null
-      ) : (
+      {user ? null : (
         // Show sign-in or sign-up form if user is not authenticated
         <AuthScreen
           email={email}

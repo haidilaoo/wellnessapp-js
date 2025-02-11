@@ -141,7 +141,6 @@ export const globalStyles = StyleSheet.create({
     fontFamily: "Inter-Regular",
     fontSize: 14,
     color: COLORS.black,
-    textAlign: "center",
     lineHeight: 14 * 1.4, // 140% of the font size
   },
 
