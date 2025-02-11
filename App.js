@@ -198,7 +198,7 @@ const RootNavigator = () => {
           isOnboardingCompleted ? (
             <Stack.Screen
               name="MainAppFlow"
-              component={MainAppFlow}
+              component={HomeScreenFlow}
               options={{ headerShown: false }}
             />
           ) : (

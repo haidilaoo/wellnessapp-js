@@ -29,6 +29,7 @@ export default function HomeScreen() {
 
         const emotion = userDoc.data().currentEmotion;
         setCurrentEmotion(emotion);
+        console.log('Current Emotion: ', currentEmotion);
 
         // const emotion = "joyful"; // Replace this with dynamic emotion if needed
         const docRef = doc(db, "quests", emotion); // Reference specific emotion document
