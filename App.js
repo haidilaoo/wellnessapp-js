@@ -198,7 +198,7 @@ const RootNavigator = () => {
           isOnboardingCompleted ? (
             <Stack.Screen
               name="MainAppFlow"
-              component={HomeScreenFlow}
+              component={HomeScreenFlow} //IMPT NOTE: In order to be able to navigate to another screen it has to be within SAME NAVIGATOR
               options={{ headerShown: false }}
             />
           ) : (
