@@ -13,6 +13,9 @@ import {
   doc,
   getDoc,
   Firestore,
+  serverTimestamp,
+  updateDoc,
+  increment,
 } from "firebase/firestore";
 import { db, firestore } from "../../firebaseConfig";
 import { getAuth } from "firebase/auth"; // Import for Firebase authentication
@@ -143,25 +146,6 @@ export default function HomeScreen() {
     }
   }, [quests]); // Runs only when `quests` updates
   const [showNotification, setShowNotification] = useState(false);
-  // useEffect(() => {
-  //   if (showNotification) {
-  //     // Fade-in animation
-  //     Animated.timing(fadeAnim, {
-  //       toValue: 1,
-  //       duration: 300,
-  //       useNativeDriver: true,
-  //     }).start();
-
-  //     // Hide notification after 3 seconds
-  //     setTimeout(() => {
-  //       Animated.timing(fadeAnim, {
-  //         toValue: 0,
-  //         duration: 300,
-  //         useNativeDriver: true,
-  //       }).start(() => setShowNotification(false));
-  //     }, 3000);
-  //   }
-  // }, [showNotification]); // Runs whenever `showNotification` changes
 
   // const fadeAnim = new Animated.Value(0); // For fade-in effect
   const [lastRemovedIndex, setLastRemovedIndex] = useState(null);
@@ -191,7 +175,79 @@ export default function HomeScreen() {
   const onDismissSnackBar = () => {
     setShowNotification(false);
   };
+  const [completedQuest, setCompletedQuest] = useState({
+    mediate: 0,
+    sleep: 0,
+    move: 0,
+    music: 0,
+  });
+  const insertQuestToDatabase = async (category) => {
+    const userUid = getAuth().currentUser.uid;
 
+    try {
+      //2. Update emotion_tally subcollection
+      const questRef = doc(db, "users", userUid, "quest_tally", category);
+      const questDoc = await getDoc(questRef); // check if quest_tally alr exists as doc
+
+      if (questDoc.exists()) {
+        await updateDoc(questRef, {
+          count: increment(1),
+          last_updated: serverTimestamp(),
+        });
+      } else {
+        await setDoc(questRef, {
+          count: 1,
+          last_updated: serverTimestamp(),
+        });
+      }
+      console.log(`Updated quest tally for category: ${category}`);
+    } catch (error) {
+      console.error("Error saving quest to database:", error);
+    }
+  };
+  const handleCompletedQuest = (category) => {
+    setCompletedQuest((prev) => ({
+      ...prev,
+      [category]: prev[category] + 1,
+    }));
+    insertQuestToDatabase(category);
+  };
+
+  const removeQuestFromDatabase = async (category) => {
+    const userUid = getAuth().currentUser.uid;
+  
+    try {
+      const questRef = doc(db, "users", userUid, "quest_tally", category);
+      const questDoc = await getDoc(questRef);
+  
+      if (questDoc.exists()) {
+        const currentCount = questDoc.data().count;
+  
+        if (currentCount > 0) {
+          await updateDoc(questRef, {
+            count: increment(-1), // Decrement count
+            last_updated: serverTimestamp(),
+          });
+          console.log(`Removed quest from category: ${category}`);
+        } else {
+          console.log(`No quests to remove in category: ${category}`);
+        }
+      } else {
+        console.log(`Quest category '${category}' does not exist.`);
+      }
+    } catch (error) {
+      console.error("Error removing quest from database:", error);
+    }
+  };
+  const handleUndoQuest = (category) => {
+    setCompletedQuest((prev) => ({
+      ...prev,
+      [category]: Math.max(0, prev[category] - 1), // Ensure count doesn't go below 0
+    }));
+  
+    removeQuestFromDatabase(category);
+  };
+    
   return (
     <View style={{ flex: 1 }}>
       <ScrollView
@@ -270,35 +326,6 @@ export default function HomeScreen() {
               </View>
             </TouchableOpacity>
             <View style={globalStyles.gap16}>
-              {/* {meditateQuest && meditateQuest.length > 0 ? (
-              meditateQuest.map((quest, index) => (
-                <QuestButton key={index} title={quest} category="Meditate" />
-              ))
-            ) : (
-              <Text>Loading or no quests available...</Text>
-            )}
-            {moveQuest && moveQuest.length > 0 ? (
-              moveQuest.map((quest, index) => (
-                <QuestButton key={index} title={quest} category="Move" />
-              ))
-            ) : (
-              <Text>Loading or no quests available...</Text>
-            )}
-            {musicQuest && musicQuest.length > 0 ? (
-              musicQuest.map((quest, index) => (
-                <QuestButton key={index} title={quest} category="Music" />
-              ))
-            ) : (
-              <Text>Loading or no quests available...</Text>
-            )}
-            {sleepQuest && sleepQuest.length > 0 ? (
-              sleepQuest.map((quest, index) => (
-                <QuestButton key={index} title={quest} category="Sleep" />
-              ))
-            ) : (
-              <Text>Loading or no quests available...</Text>
-            )} */}
-
               {quests.length > 0 && currentEmotion !== null ? (
                 quests.map((quest, index) =>
                   visibleQuests[index] ? (
@@ -306,7 +333,10 @@ export default function HomeScreen() {
                       key={index}
                       title={quest.title}
                       category={quest.category}
-                      onPress={() => handleHideComponent(index)}
+                      onPress={() => {
+                        handleHideComponent(index);
+                        handleCompletedQuest(quest.category);
+                      }}
                     />
                   ) : null
                 )
@@ -325,7 +355,7 @@ export default function HomeScreen() {
           message="Quest completed!"
           onDismiss={onDismissSnackBar}
           visible={showNotification}
-          onUndo={handleShowComponent}
+          onUndo={() => {handleShowComponent(); handleUndoQuest(quests[lastRemovedIndex].category);}}
           style={{
             position: "absolute",
             bottom: 10, // Adjust as needed

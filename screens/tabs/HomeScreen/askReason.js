@@ -63,7 +63,7 @@ export default function askReason({navigation}) {
       );
       console.log("Current reasons saved to database");
 
-     //2. Update emotion_tally subcollection
+     //2. Update reason_tally subcollection
 
      for (let reason of reasons) {
       if (!reason || typeof reason !== "string") {
