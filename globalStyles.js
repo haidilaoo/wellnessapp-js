@@ -4,6 +4,7 @@ import { color } from "react-native-elements/dist/helpers";
 const COLORS = {
   primary: "#5E7638", // Brand/green
   secondary: "#C0CFAD", // Brand/lighter green
+  secondary2: '#99DB45',
   tertiary: "#F2F5ED", //Brand/light green
   orange: "#FF702C", // Brand/orange
   white: "#FFFFFF", // Used for secondary buttons

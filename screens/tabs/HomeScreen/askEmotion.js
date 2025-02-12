@@ -29,6 +29,7 @@ import {
 import { db } from "../../../firebaseConfig";
 
 import EmotionButton from "../../../components/EmotionButton";
+import CustomSnackbar from "../../../components/Snackbar";
 
 export default function askEmotion({ navigation }) {
   const [sliderValue, setSliderValue] = useState(0);

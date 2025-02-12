@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, Image } from "react-native";
+import { View, Text, StyleSheet, Image, Animated } from "react-native";
 import { COLORS, globalStyles } from "../../globalStyles";
 import { ScrollView } from "react-native-gesture-handler";
 import QuestButton from "../../components/QuestButton";
@@ -21,6 +21,7 @@ import { useNavigation } from "@react-navigation/native";
 import useDailyReset from "./useDailyReset";
 import { Button } from "react-native-elements";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import CustomSnackbar from "../../components/Snackbar";
 
 export default function HomeScreen() {
   // const [meditateQuest, setMeditateQuest] = useState([]);
@@ -29,7 +30,7 @@ export default function HomeScreen() {
   // const [sleepQuest, setSleepQuest] = useState([]);
   const [quests, setQuests] = useState([]); // Stores selected 6 quests
   const [currentEmotion, setCurrentEmotion] = useState(null);
-  
+
   const userUid = getAuth().currentUser.uid;
   const emotion = useDailyReset(userUid); // This hook will reset and retrieve currentEmotion daily
 
@@ -44,7 +45,7 @@ export default function HomeScreen() {
 
         setCurrentEmotion(emotion);
         console.log("Current Emotion: ", currentEmotion);
-     
+
         // const emotion = "joyful"; // Replace this with dynamic emotion if needed
         const docRef = doc(db, "quests", emotion); // Reference specific emotion document
         const docSnap = await getDoc(docRef);
@@ -131,66 +132,145 @@ export default function HomeScreen() {
     return shuffled.slice(0, n); // Get first `n` items
   };
   const navigation = useNavigation();
+
+  // const [visible, setVisible] = useState(true); // for non arrays
+  const [visibleQuests, setVisibleQuests] = useState([]); // Initially, all quests are visible
+
+  // Update visibleQuests when quests are loaded
+  useEffect(() => {
+    if (quests.length > 0) {
+      setVisibleQuests(new Array(quests.length).fill(true)); // Ensure all quests are initially visible
+    }
+  }, [quests]); // Runs only when `quests` updates
+  const [showNotification, setShowNotification] = useState(false);
+  // useEffect(() => {
+  //   if (showNotification) {
+  //     // Fade-in animation
+  //     Animated.timing(fadeAnim, {
+  //       toValue: 1,
+  //       duration: 300,
+  //       useNativeDriver: true,
+  //     }).start();
+
+  //     // Hide notification after 3 seconds
+  //     setTimeout(() => {
+  //       Animated.timing(fadeAnim, {
+  //         toValue: 0,
+  //         duration: 300,
+  //         useNativeDriver: true,
+  //       }).start(() => setShowNotification(false));
+  //     }, 3000);
+  //   }
+  // }, [showNotification]); // Runs whenever `showNotification` changes
+
+  // const fadeAnim = new Animated.Value(0); // For fade-in effect
+  const [lastRemovedIndex, setLastRemovedIndex] = useState(null);
+  const handleHideComponent = (index) => {
+    // setVisible(false); // Hide the component
+    setVisibleQuests((prev) =>
+      prev.map((isVisible, i) => (i === index ? false : isVisible))
+    );
+    setLastRemovedIndex(index); // Store last removed quest index
+
+    setShowNotification(true); // Show notification // State update happens asynchronously
+    console.log("Notification state: ", showNotification);
+  };
+
+  const handleShowComponent = () => {
+    // setVisible(false); // Hide the component
+    if (lastRemovedIndex !== null) {
+      setVisibleQuests((prev) =>
+        prev.map((isVisible, i) => (i === lastRemovedIndex ? true : isVisible))
+      );
+      setLastRemovedIndex(null); // Reset index after restoring
+    }
+    setShowNotification(false); // Show notification // State update happens asynchronously
+    console.log("Notification state: ", showNotification);
+  };
+
+  const onDismissSnackBar = () => {
+    setShowNotification(false);
+  };
+
   return (
-    <ScrollView
-      contentContainerStyle={{ flexGrow: 1 }}
-      keyboardShouldPersistTaps="handled"
-    >
-      <View
-        style={[globalStyles.container, globalStyles.spaceBetween, { flex: 1 }]}
+    <View style={{ flex: 1 }}>
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
       >
-        <Image
-          source={require("../../assets/topbanner-image.png")}
-          style={globalStyles.topbanner}
-          resizeMode="contain"
-        />
-        <View style={[globalStyles.gap24, { marginTop: 250 }]}>
-          <Text style={globalStyles.h3}>Today's quests</Text>
-          <Button title="Manually Reset Emotion" onPress={handleManualReset} />
-          <TouchableOpacity
-            style={styles.emotionContainer}
-            onPress={() => navigation.navigate("askEmotion")}
-          >
-            <View
-              style={[
-                {
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                },
-              ]}
+        <View
+          style={[
+            globalStyles.container,
+            globalStyles.spaceBetween,
+            { flex: 1 },
+          ]}
+        >
+          <Image
+            source={require("../../assets/topbanner-image.png")}
+            style={globalStyles.topbanner}
+            resizeMode="contain"
+          />
+          <View style={[globalStyles.gap24, { marginTop: 250 }]}>
+            <Text style={globalStyles.h3}>Today's quests</Text>
+            <Button
+              title="Manually Reset Emotion"
+              onPress={handleManualReset}
+            />
+
+            <TouchableOpacity
+              style={styles.emotionContainer}
+              onPress={() => navigation.navigate("askEmotion")}
             >
-              <View style={globalStyles.gap4}>
-                {currentEmotion ? (
-                  <>
-                    <Text
-                      style={[globalStyles.smallText, { color: COLORS.white }]}
-                    >
-                      Today's emotion
-                    </Text>
-                    <Text style={[globalStyles.pBold, { color: COLORS.white }]}>
-                      {currentEmotion.charAt(0).toUpperCase() +
-                        currentEmotion.slice(1)}
-                    </Text>
-                  </>
-                ) : (
-                  <>
-                    <Text
-                      style={[globalStyles.smallText, { color: COLORS.white }]}
-                    >
-                      How was your day?
-                    </Text>
-                    <Text style={[globalStyles.pBold, { color: COLORS.white }]}>
-                      Record your emotion today
-                    </Text>
-                  </>
-                )}
+              <View
+                style={[
+                  {
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  },
+                ]}
+              >
+                <View style={globalStyles.gap4}>
+                  {currentEmotion ? (
+                    <>
+                      <Text
+                        style={[
+                          globalStyles.smallText,
+                          { color: COLORS.white },
+                        ]}
+                      >
+                        Today's emotion
+                      </Text>
+                      <Text
+                        style={[globalStyles.pBold, { color: COLORS.white }]}
+                      >
+                        {currentEmotion.charAt(0).toUpperCase() +
+                          currentEmotion.slice(1)}
+                      </Text>
+                    </>
+                  ) : (
+                    <>
+                      <Text
+                        style={[
+                          globalStyles.smallText,
+                          { color: COLORS.white },
+                        ]}
+                      >
+                        How was your day?
+                      </Text>
+                      <Text
+                        style={[globalStyles.pBold, { color: COLORS.white }]}
+                      >
+                        Record your emotion today
+                      </Text>
+                    </>
+                  )}
+                </View>
+                <Icon name="chevron-right" size={24} color={COLORS.white} />
               </View>
-              <Icon name="chevron-right" size={24} color={COLORS.white} />
-            </View>
-          </TouchableOpacity>
-          <View style={globalStyles.gap16}>
-            {/* {meditateQuest && meditateQuest.length > 0 ? (
+            </TouchableOpacity>
+            <View style={globalStyles.gap16}>
+              {/* {meditateQuest && meditateQuest.length > 0 ? (
               meditateQuest.map((quest, index) => (
                 <QuestButton key={index} title={quest} category="Meditate" />
               ))
@@ -219,21 +299,42 @@ export default function HomeScreen() {
               <Text>Loading or no quests available...</Text>
             )} */}
 
-            {quests.length > 0 && currentEmotion !== null ? (
-              quests.map((quest, index) => (
-                <QuestButton
-                  key={index}
-                  title={quest.title}
-                  category={quest.category}
-                />
-              ))
-            ) : (
-              <Text>Loading or no quests available...</Text>
-            )}
+              {quests.length > 0 && currentEmotion !== null ? (
+                quests.map((quest, index) =>
+                  visibleQuests[index] ? (
+                    <QuestButton
+                      key={index}
+                      title={quest.title}
+                      category={quest.category}
+                      onPress={() => handleHideComponent(index)}
+                    />
+                  ) : null
+                )
+              ) : (
+                <Text>Loading or no quests available...</Text>
+              )}
+            </View>
           </View>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+      {showNotification && (
+        // <Animated.View style={[styles.notification, { opacity: fadeAnim }]}>
+        //   <Text style={styles.notificationText}>Quest Completed!</Text>
+        // </Animated.View>
+        <CustomSnackbar
+          message="Quest completed!"
+          onDismiss={onDismissSnackBar}
+          visible={showNotification}
+          onUndo={handleShowComponent}
+          style={{
+            position: "absolute",
+            bottom: 10, // Adjust as needed
+            left: 0,
+            right: 0,
+          }} // Directly style Snackbar
+        ></CustomSnackbar>
+      )}
+    </View>
   );
 }
 
@@ -245,5 +346,17 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     // borderColor: COLORS.borderDefault,
     // borderWidth: 1,
+  },
+  notification: {
+    position: "absolute",
+    bottom: 20,
+    backgroundColor: "#333",
+    padding: 15,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  notificationText: {
+    color: "white",
+    fontSize: 16,
   },
 });
