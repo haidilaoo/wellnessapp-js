@@ -25,6 +25,7 @@ import { db } from "./firebaseConfig";
 import { useUser } from "./screens/onboarding/UserContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { doc, getDoc } from "firebase/firestore";
+import Profile from "./screens/tabs/Profile.js";
 
 // Navigation Stacks
 const Tab = createBottomTabNavigator();
@@ -117,6 +118,11 @@ const MainAppFlow = () => {
       <Tab.Screen
         name="Therapist"
         component={TherapistScreen}
+        options={{ headerShown: false }}
+      />
+       <Tab.Screen
+        name="Profile"
+        component={Profile}
         options={{ headerShown: false }}
       />
     </Tab.Navigator>

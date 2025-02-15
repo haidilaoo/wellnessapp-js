@@ -7,6 +7,10 @@ const COLORS = {
   secondary2: '#99DB45',
   tertiary: "#F2F5ED", //Brand/light green
   orange: "#FF702C", // Brand/orange
+  darkOrange: '#F26522',
+  blue: '#5176BA',
+  green: '#0C8852',
+  pink: '#C84975',
   white: "#FFFFFF", // Used for secondary buttons
 
   background: "#F5F6F6",
@@ -78,6 +82,9 @@ export const globalStyles = StyleSheet.create({
 
   gap10: {
     gap: 10,
+  },
+  gap12: {
+    gap: 12,
   },
 
   gap16: {

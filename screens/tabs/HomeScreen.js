@@ -42,12 +42,11 @@ export default function HomeScreen() {
       const userDoc = await getDoc(doc(db, "users", userUid));
       try {
         // Fetch user's currentEmotion
-
         const emotion = userDoc.data().currentEmotion;
-        console.log("Current Emotion:", emotion);
+        console.log("Current Emotion from database:", emotion);
 
         setCurrentEmotion(emotion);
-        console.log("Current Emotion: ", currentEmotion);
+        console.log("Current Emotion after reset: ", currentEmotion);
 
         // const emotion = "joyful"; // Replace this with dynamic emotion if needed
         const docRef = doc(db, "quests", emotion); // Reference specific emotion document
