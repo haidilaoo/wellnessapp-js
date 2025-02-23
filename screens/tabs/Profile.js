@@ -11,6 +11,9 @@ import { COLORS, globalStyles } from "../../globalStyles";
 import { getAuth } from "firebase/auth";
 import { db } from "../../firebaseConfig";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
+import CircleWithText from "../../components/CircleWithText";
+import CircleArrangement from "../../components/CircleArrangement";
+import TreemapChart from "../../components/TreemapChart";
 
 export default function Profile() {
   const { width } = useWindowDimensions();
@@ -112,7 +115,13 @@ export default function Profile() {
     };
     fetchData();
   }, []);
-
+  const circles = [
+    { text: "Hello", size: 160, value: 5 },
+    { text: "Hello", size: 140, value: 4 },
+    { text: "Hello", size: 120, value: 3 },
+    { text: "Hello", size: 100, value: 2 },
+    { text: "excited", size: 80, value: 1 },
+  ];
   return (
     <View style={{ flex: 1 }}>
       <ScrollView
@@ -151,16 +160,7 @@ export default function Profile() {
               <Text style={globalStyles.h2}>{nickname}</Text>
               <Text style={globalStyles.p}>{memo}</Text>
             </View>
-            <View
-              style={{
-                marginTop: 24,
-                backgroundColor: COLORS.white,
-                paddingVertical: 24,
-                paddingHorizontal: 16,
-                borderTopLeftRadius: 16,
-                borderTopRightRadius: 16,
-              }}
-            >
+            <View style={styles.whiteContainer}>
               <View style={globalStyles.gap4}>
                 <Text style={globalStyles.h3}>Quest completed</Text>
                 <Text style={globalStyles.p}>All the quest you completed</Text>
@@ -210,6 +210,39 @@ export default function Profile() {
                 </View>
               </View>
             </View>
+            <View style={styles.whiteContainer}>
+              <View style={globalStyles.gap24}>
+                <Text style={globalStyles.h3}>Top emotions</Text>
+                <View
+                  style={{
+                    flex: 1,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    width: "100%", // Make sure parent has full width
+                  }}
+                >
+                  <CircleArrangement circles={circles} />
+                </View>
+              </View>
+            </View>
+            <View style={styles.whiteContainer}>
+              <View style={globalStyles.gap24}>
+                <View style={globalStyles.gap4}>
+                  <Text style={globalStyles.h3}>Recorded keywords</Text>
+                  <Text style={globalStyles.p}>
+                    See how each keyword affected you
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    flex: 1,
+                    justifyContent: "center",
+                    // alignItems: "center",
+                    width: "100%", // Make sure parent has full width
+                  }}
+                > <TreemapChart width={330} height={250} /></View>
+              </View>
+            </View>
           </View>
         </View>
       </ScrollView>
@@ -218,6 +251,15 @@ export default function Profile() {
 }
 
 const styles = StyleSheet.create({
+  whiteContainer: {
+    marginTop: 24,
+    backgroundColor: COLORS.white,
+    paddingVertical: 24,
+    paddingHorizontal: 16,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+  },
+
   questContainer: {
     alignItems: "center",
     flex: 1, // Each child takes up equal width

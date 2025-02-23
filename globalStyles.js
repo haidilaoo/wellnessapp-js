@@ -6,6 +6,7 @@ const COLORS = {
   secondary: "#C0CFAD", // Brand/lighter green
   secondary2: '#99DB45',
   tertiary: "#F2F5ED", //Brand/light green
+  tertiary2: "#F0FCF2", //Brand/light green
   orange: "#FF702C", // Brand/orange
   darkOrange: '#F26522',
   blue: '#5176BA',

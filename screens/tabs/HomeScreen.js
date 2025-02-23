@@ -267,10 +267,10 @@ export default function HomeScreen() {
           />
           <View style={[globalStyles.gap24, { marginTop: 250 }]}>
             <Text style={globalStyles.h3}>Today's quests</Text>
-            <Button
+            {/* <Button
               title="Manually Reset Emotion"
               onPress={handleManualReset}
-            />
+            /> */}
 
             <TouchableOpacity
               style={styles.emotionContainer}
