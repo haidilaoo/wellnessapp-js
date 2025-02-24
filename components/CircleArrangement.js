@@ -1,10 +1,10 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Dimensions, Animated } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, Animated, Pressable } from 'react-native';
 import { COLORS } from '../globalStyles';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-const CircleArrangement = ({ circles }) => {
+const CircleArrangement = ({ circles, onSelect, selectedCircle }) => {
   const animations = useRef(
     circles.map(() => ({
       translateY: new Animated.Value(0),
@@ -97,12 +97,15 @@ const CircleArrangement = ({ circles }) => {
 
   return (
     <View style={[styles.container, { height: containerHeight, width: containerWidth }]}>
-      {positions.map((circle, index) => (
+      {positions.map((circle, index) => {
+        const isSelected = selectedCircle && selectedCircle.text === circle.text;
+      return (
         <Animated.View
           key={index}
           style={[
             styles.circle,
             {
+              position: "absolute",
               width: circle.size,
               height: circle.size,
               backgroundColor: circle.color || COLORS.tertiary2,
@@ -113,11 +116,22 @@ const CircleArrangement = ({ circles }) => {
               ],
             }
           ]}
-        >
+        ><Pressable
+        onPress={() => onSelect(circle)} // Trigger onSelect when pressed
+        style={ [
+          styles.circle,
+          {
+            width: circle.size,
+            height: circle.size,
+            backgroundColor: isSelected ? COLORS.primary : circle.color || COLORS.tertiary2, // Press effect
+          },
+        ]}
+      >
           <Text 
             style={[
               styles.text,
-              smallestSizes.has(circle.size) && styles.smallText
+              smallestSizes.has(circle.size) && styles.smallText,
+              {color: isSelected ? COLORS.white : COLORS.primary}
             ]}
           >
             {circle.text}
@@ -126,14 +140,17 @@ const CircleArrangement = ({ circles }) => {
             <Text 
               style={[
                 styles.value,
-                smallestSizes.has(circle.size) && styles.smallText
+                smallestSizes.has(circle.size) && styles.smallText,
+                {color: isSelected ? COLORS.white : COLORS.primary}
               ]}
             >
               {circle.value}
             </Text>
           )}
+           </Pressable>
         </Animated.View>
-      ))}
+        );
+      })}
     </View>
   );
 };

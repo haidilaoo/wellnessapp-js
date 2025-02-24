@@ -14,6 +14,7 @@ import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import CircleWithText from "../../components/CircleWithText";
 import CircleArrangement from "../../components/CircleArrangement";
 import TreemapChart from "../../components/TreemapChart";
+import { Chip } from "react-native-paper";
 
 export default function Profile() {
   const { width } = useWindowDimensions();
@@ -24,6 +25,10 @@ export default function Profile() {
   const [sleep, setSleep] = useState(null);
   const [music, setMusic] = useState(null);
   const userUid = getAuth().currentUser.uid;
+  const [selectedCircle, setSelectedCircle] = useState(null);
+  const handleSelect = (circle) => {
+    setSelectedCircle(circle); // Update selected circle
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -116,10 +121,10 @@ export default function Profile() {
     fetchData();
   }, []);
   const circles = [
-    { text: "Hello", size: 160, value: 5 },
-    { text: "Hello", size: 140, value: 4 },
-    { text: "Hello", size: 120, value: 3 },
-    { text: "Hello", size: 100, value: 2 },
+    { text: "happy", size: 160, value: 5 },
+    { text: "calm", size: 140, value: 4 },
+    { text: "anxious", size: 120, value: 3 },
+    { text: "tired", size: 100, value: 2 },
     { text: "excited", size: 80, value: 1 },
   ];
   return (
@@ -221,7 +226,23 @@ export default function Profile() {
                     width: "100%", // Make sure parent has full width
                   }}
                 >
-                  <CircleArrangement circles={circles} />
+                  <CircleArrangement
+                    circles={circles}
+                    selectedCircle={selectedCircle}
+                    onSelect={handleSelect}
+                  />
+                </View>
+                <View
+                  style={{
+                    backgroundColor: "#F7F8FA",
+                    padding: 16,
+                    borderRadius: 16,
+                  }}
+                >
+                  <Text style={[globalStyles.pBold, {marginBottom: 16}]}>
+                    Keywords recorded with  <Text style={{color: COLORS.green}}>______</Text>
+                  </Text>
+                  <Chip style={{backgroundColor: COLORS.white,alignSelf: "flex-start"}} textStyle={{ color: COLORS.blackSecondary }} >Tap on an emotion!</Chip>
                 </View>
               </View>
             </View>
@@ -240,7 +261,10 @@ export default function Profile() {
                     // alignItems: "center",
                     width: "100%", // Make sure parent has full width
                   }}
-                > <TreemapChart width={330} height={250} /></View>
+                >
+                  {" "}
+                  <TreemapChart width={330} height={250} />
+                </View>
               </View>
             </View>
           </View>
