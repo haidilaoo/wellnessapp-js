@@ -4,7 +4,7 @@ import { getAuth, signOut } from "firebase/auth";
 import { Button } from "react-native-elements";
 import { CommonActions, useNavigation } from "@react-navigation/native";
 import { COLORS, globalStyles } from "../../globalStyles";
-import { FAB } from "react-native-paper";
+import { Chip, FAB } from "react-native-paper";
 import Icon from "react-native-vector-icons/Feather";
 
 export default function CommunityScreen() {

@@ -5,6 +5,7 @@ const COLORS = {
   primary: "#5E7638", // Brand/green
   secondary: "#C0CFAD", // Brand/lighter green
   secondary2: '#99DB45',
+  secondary3: '#D5EAC5',
   tertiary: "#F2F5ED", //Brand/light green
   tertiary2: "#F0FCF2", //Brand/light green
   orange: "#FF702C", // Brand/orange

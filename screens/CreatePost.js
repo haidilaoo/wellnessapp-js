@@ -6,12 +6,15 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
+  Pressable,
 } from "react-native";
 import React, { useRef } from "react";
 import { COLORS, globalStyles } from "../globalStyles";
 // import { TextInput } from "react-native-paper";
 import ActionSheet from "react-native-actionsheet";
 import { useNavigation } from "@react-navigation/native";
+import { Chip } from "react-native-paper";
+import Icon from "react-native-vector-icons/Feather";
 export default function CreatePost() {
   const navigation = useNavigation();
   const actionSheetRef = useRef(null);
@@ -85,11 +88,30 @@ export default function CreatePost() {
             </View>
           </TouchableOpacity>
         </View>
+        <Pressable
+          style={{
+            alignSelf: "flex-start",
+            marginTop: 16,
+            paddingVertical: 8,
+            paddingHorizontal: 10,
+            backgroundColor: "#ECECEC",
+            flexDirection: "row",
+            gap: 4,
+            borderRadius: 8,
+            alignItems: "center",
+          }}
+        >
+          <Text style={[globalStyles.btnText, { color: COLORS.black }]}>
+            General
+          </Text>
+          <Icon name="code" color="black" size={14} style={{ transform: [{ rotate: '90deg' }] }}/>
+        </Pressable>
         <View
           style={{
             flexDirection: "row",
             gap: 12,
             alignItems: "center",
+            marginTop: 16,
           }}
         >
           <Image
@@ -97,7 +119,6 @@ export default function CreatePost() {
             style={{
               width: 56,
               height: 56,
-              marginTop: 16,
             }}
           />
           <TextInput
