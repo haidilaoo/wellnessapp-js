@@ -93,10 +93,10 @@ export default function Profile() {
           return {
             text: "",
             size: 0,
-            value: 0
+            value: 0,
           };
         }
-        
+
         // Calculate size based on count (higher count = larger circle)
         const size =
           emotion.count === 0
@@ -108,43 +108,42 @@ export default function Profile() {
           size: Math.round(size),
           value: emotion.count,
         };
-        
       });
 
       setCircles(mappedCircles);
     }
   }, [topEmotions]);
 
-// Fetch reasons from Firestore when selectedCircle changes
-useEffect(() => {
-  if (selectedCircle) {
-    const fetchReasons = async () => {
-      try {
-        const reasonsRef = doc(
-          db,
-          "users",
-          userUid,  // Replace with the actual user UID
-          "emotion_tally",
-          selectedCircle.text
-        );
+  // Fetch reasons from Firestore when selectedCircle changes
+  useEffect(() => {
+    if (selectedCircle) {
+      const fetchReasons = async () => {
+        try {
+          const reasonsRef = doc(
+            db,
+            "users",
+            userUid, // Replace with the actual user UID
+            "emotion_tally",
+            selectedCircle.text
+          );
 
-        const reasonDoc = await getDoc(reasonsRef);
-        
-        if (reasonDoc.exists()) {
-          const reasonsData = reasonDoc.data().reasons;
-          setReasons(reasonsData);  // Update state with reasons
-          console.log('Reasons: ', reasonsData);
-        } else {
-          console.log("No reasons found for the selected circle.");
+          const reasonDoc = await getDoc(reasonsRef);
+
+          if (reasonDoc.exists()) {
+            const reasonsData = reasonDoc.data().reasons;
+            setReasons(reasonsData); // Update state with reasons
+            console.log("Reasons: ", reasonsData);
+          } else {
+            console.log("No reasons found for the selected circle.");
+          }
+        } catch (error) {
+          console.error("Error fetching reasons: ", error);
         }
-      } catch (error) {
-        console.error("Error fetching reasons: ", error);
-      }
-    };
+      };
 
-    fetchReasons();
-  }
-}, [selectedCircle]);  // Runs the effect when selectedCircle changes
+      fetchReasons();
+    }
+  }, [selectedCircle]); // Runs the effect when selectedCircle changes
 
   useEffect(() => {
     const fetchData = async () => {
@@ -164,8 +163,6 @@ useEffect(() => {
         } else {
           setMemo(memo);
         }
-
-
 
         //FETCH QUEST COUNTS
         const meditateRef = doc(
@@ -247,7 +244,6 @@ useEffect(() => {
   //   { text: "tired", size: 100, value: 2 },
   //   { text: "excited", size: 80, value: 1 },
   // ];
-
 
   return (
     <View style={{ flex: 1 }}>
@@ -372,10 +368,11 @@ useEffect(() => {
                   {selectedCircle != null ? (
                     // reasons.map((reason,index)=> (<Chip>{reason}</Chip>))
                     <>
-                      {" "}
                       <Text style={[globalStyles.pBold, { marginBottom: 16 }]}>
                         Keywords recorded with{" "}
-                        <Text style={{ color: COLORS.green }}>{selectedCircle.text}</Text>
+                        <Text style={{ color: COLORS.green }}>
+                          {selectedCircle.text}
+                        </Text>
                       </Text>
                       <View
                         style={[
@@ -385,22 +382,20 @@ useEffect(() => {
                         ]}
                       >
                         {reasons.map((reason, index) => (
-                        <Chip
-                          style={{
-                            backgroundColor: COLORS.white,
-                            alignSelf: "flex-start",
-                          }}
-                          textStyle={{ color: COLORS.blackSecondary }}
-                        >
-                          {reason}
-                        </Chip>
-                         ))}
-             
+                          <Chip
+                            style={{
+                              backgroundColor: COLORS.white,
+                              alignSelf: "flex-start",
+                            }}
+                            textStyle={{ color: COLORS.blackSecondary }}
+                          >
+                            {reason}
+                          </Chip>
+                        ))}
                       </View>
                     </>
                   ) : (
                     <>
-                      {" "}
                       <Text style={[globalStyles.pBold, { marginBottom: 16 }]}>
                         Keywords recorded with{" "}
                         <Text style={{ color: COLORS.green }}>______</Text>
@@ -444,7 +439,6 @@ useEffect(() => {
                     width: "100%", // Make sure parent has full width
                   }}
                 >
-                  {" "}
                   <TreemapChart width={330} height={250} />
                 </View>
               </View>

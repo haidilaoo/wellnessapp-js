@@ -10,7 +10,6 @@ import Icon from "react-native-vector-icons/Feather";
 export default function CommunityScreen() {
   const navigation = useNavigation();
 
-
   return (
     <View style={{ flex: 1 }}>
       <ScrollView
@@ -23,7 +22,6 @@ export default function CommunityScreen() {
             style={[globalStyles.topbanner, { marginTop: -100 }]}
             resizeMode="contain"
           />
-
           <View style={[globalStyles.gap24, { marginTop: 185 }]}>
             <Text style={globalStyles.h3}>Community</Text>
             <View style={globalStyles.gap24}>
@@ -37,7 +35,6 @@ export default function CommunityScreen() {
                     }}
                   ></Image>
                   <View style={[{ flexDirection: "column" }]}>
-                    {" "}
                     <Text style={globalStyles.pBold}>Nick tan</Text>
                     <Text style={globalStyles.p}>topic category</Text>
                   </View>
@@ -106,7 +103,6 @@ export default function CommunityScreen() {
                     }}
                   ></Image>
                   <View style={[{ flexDirection: "column" }]}>
-                    {" "}
                     <Text style={globalStyles.pBold}>Nick tan</Text>
                     <Text style={globalStyles.p}>topic category</Text>
                   </View>
@@ -175,7 +171,9 @@ export default function CommunityScreen() {
           bottom: 0,
           backgroundColor: COLORS.primary, // FAB background color
         }}
-        onPress={() => {console.log("Pressed"), navigation.navigate("CreatePost")}}
+        onPress={() => {
+          console.log("Pressed"), navigation.navigate("CreatePost");
+        }}
       />
     </View>
   );

@@ -44,7 +44,6 @@ export default function CreatePost() {
           }}
         >
           <TouchableOpacity onPress={() => actionSheetRef.current.show()}>
-            {" "}
             <Text style={[globalStyles.p, { color: COLORS.black }]}>
               Cancel
             </Text>
@@ -57,24 +56,34 @@ export default function CreatePost() {
             destructiveButtonIndex={1} // Makes "Delete" red (for emphasis)
             onPress={handlePress} // Handles button clicks
           />
-          <TouchableOpacity onPress={() => {Alert.alert("Posted!", "Your post has been posted in Community!", [
-        {
-          text: "OK",
-          onPress: () => navigation.goBack(), // Go back to the previous screen after pressing OK
-        },
-      ]);}}><View
-            style={{
-              backgroundColor: COLORS.primary,
-              paddingVertical: 8,
-              paddingHorizontal: 20,
-              borderRadius: 24,
-              alignSelf: "flex-start",
+          <TouchableOpacity
+            onPress={() => {
+              Alert.alert(
+                "Posted!",
+                "Your post has been posted in Community!",
+                [
+                  {
+                    text: "OK",
+                    onPress: () => navigation.goBack(), // Go back to the previous screen after pressing OK
+                  },
+                ]
+              );
             }}
           >
-            {" "}
-            <Text style={[globalStyles.p, { color: COLORS.white }]}>Post</Text>
-          </View></TouchableOpacity>
-          
+            <View
+              style={{
+                backgroundColor: COLORS.primary,
+                paddingVertical: 8,
+                paddingHorizontal: 20,
+                borderRadius: 24,
+                alignSelf: "flex-start",
+              }}
+            >
+              <Text style={[globalStyles.p, { color: COLORS.white }]}>
+                Post
+              </Text>
+            </View>
+          </TouchableOpacity>
         </View>
         <View
           style={{
