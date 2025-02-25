@@ -24,12 +24,13 @@ const Button = ({
   
     const disabledStyles = 
     state === false ? styles.disabled : null;
-
+// Merge the passed style with internal styles
+const combinedStyle = StyleSheet.flatten([styles.btn, buttonStyles, disabledStyles, style]);
     // console.log("Button state:", state);  // Logs whenever Button renders
 
   return (
-    <TouchableOpacity onPress={state === false ? null: onPress} style={style}>
-      <View style={[styles.btn, buttonStyles, disabledStyles]}>
+    <TouchableOpacity onPress={state === false ? null: onPress} >
+      <View style={combinedStyle}>
         {iconName && <Icon name={iconName} size={iconSize} color={iconColor} />}
         {imageSource && (
           <Image
@@ -59,7 +60,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 16,
     backgroundColor: COLORS.primary,
-    width: "100%",
+    // width: "100%",
     alignSelf: "stretch",
     alignItems: "center",
     justifyContent: "center",
