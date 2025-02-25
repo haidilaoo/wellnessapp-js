@@ -2,13 +2,14 @@ import React from "react";
 import { View, Text, StyleSheet, ScrollView, Image } from "react-native";
 import { getAuth, signOut } from "firebase/auth";
 import { Button } from "react-native-elements";
-import { useNavigation } from "@react-navigation/native";
+import { CommonActions, useNavigation } from "@react-navigation/native";
 import { COLORS, globalStyles } from "../../globalStyles";
 import { FAB } from "react-native-paper";
 import Icon from "react-native-vector-icons/Feather";
 
 export default function CommunityScreen() {
   const navigation = useNavigation();
+
 
   return (
     <View style={{ flex: 1 }}>
@@ -174,7 +175,7 @@ export default function CommunityScreen() {
           bottom: 0,
           backgroundColor: COLORS.primary, // FAB background color
         }}
-        onPress={() => console.log("Pressed")}
+        onPress={() => {console.log("Pressed"), navigation.navigate("CreatePost")}}
       />
     </View>
   );

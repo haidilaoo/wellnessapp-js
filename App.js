@@ -27,6 +27,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { doc, getDoc } from "firebase/firestore";
 import Profile from "./screens/tabs/Profile.js";
 import CommunityScreen from "./screens/tabs/CommunityScreen.js";
+import CreatePost from "./screens/CreatePost.js";
 
 // Navigation Stacks
 const Tab = createBottomTabNavigator();
@@ -103,6 +104,11 @@ const HomeScreenFlow = () => {
         component={askReason}
         options={{ headerShown: false }}
       />
+      <Stack.Screen
+        name="CreatePost"
+        component={CreatePost}
+        options={{ headerShown: false }}
+      />
     </Stack.Navigator>
   );
 };
@@ -121,12 +127,12 @@ const MainAppFlow = () => {
         component={TherapistScreen}
         options={{ headerShown: false }}
       />
-          <Tab.Screen
+      <Tab.Screen
         name="Community"
         component={CommunityScreen}
         options={{ headerShown: false }}
       />
-       <Tab.Screen
+      <Tab.Screen
         name="Profile"
         component={Profile}
         options={{ headerShown: false }}
@@ -142,9 +148,8 @@ const checkOnboardingState = async () => {
   if (user) {
     const userDoc = await getDoc(doc(db, "users", user.uid));
     if (userDoc.exists()) {
-     
-      console.log('onboarding state: ', userDoc.data().isOnboardingCompleted);
-      return userDoc.data().isOnboardingCompleted || false;  // Return true if completed, otherwise false
+      console.log("onboarding state: ", userDoc.data().isOnboardingCompleted);
+      return userDoc.data().isOnboardingCompleted || false; // Return true if completed, otherwise false
     } else {
       console.log("No such document!");
       return false; // If no user document, assume onboarding is not completed
@@ -176,14 +181,13 @@ const RootNavigator = () => {
         setIsOnboardingCompleted(false);
       }
     });
-  
+
     return () => unsubscribe(); // Cleanup on unmount
   }, []);
 
   return (
-  
     <NavigationContainer>
-        {console.log('onboarding state: ', isOnboardingCompleted)}
+      {console.log("onboarding state: ", isOnboardingCompleted)}
       <Stack.Navigator
         screenOptions={{
           headerStyle: {
