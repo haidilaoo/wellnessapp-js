@@ -8,6 +8,8 @@ const EmotionButton = ({state=false , title,emotion, onPress,style}) => {
         joyful: require("../assets/emotion-joyful.png"),
         meh: require("../assets/emotion-meh.png"),
         silly: require("../assets/emotion-silly.png"),
+        angry: require("../assets/emotion-angry.png"),
+        cute: require("../assets/emotion-cute.png"),
         // Add other emotions as needed
       };
 

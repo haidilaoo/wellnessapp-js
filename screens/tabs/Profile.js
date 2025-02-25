@@ -10,11 +10,21 @@ import { ScrollView } from "react-native-gesture-handler";
 import { COLORS, globalStyles } from "../../globalStyles";
 import { getAuth } from "firebase/auth";
 import { db } from "../../firebaseConfig";
-import { doc, getDoc, onSnapshot } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  onSnapshot,
+  collection,
+  query,
+  orderBy,
+  limit,
+  getDocs,
+} from "firebase/firestore";
 import CircleWithText from "../../components/CircleWithText";
 import CircleArrangement from "../../components/CircleArrangement";
 import TreemapChart from "../../components/TreemapChart";
 import { Chip } from "react-native-paper";
+import { getDataConnect } from "firebase/data-connect";
 
 export default function Profile() {
   const { width } = useWindowDimensions();
@@ -26,9 +36,115 @@ export default function Profile() {
   const [music, setMusic] = useState(null);
   const userUid = getAuth().currentUser.uid;
   const [selectedCircle, setSelectedCircle] = useState(null);
+  const [reasons, setReasons] = useState([]);
+  const [topEmotions, setTopEmotions] = useState([]);
+
   const handleSelect = (circle) => {
     setSelectedCircle(circle); // Update selected circle
   };
+  // Initialize circles as an empty array in state
+  const [circles, setCircles] = useState([]);
+  // 1st useEffect: Fetch top 5 emotions
+  useEffect(() => {
+    const fetchTopEmotions = async () => {
+      try {
+        const emotionRef = collection(db, "users", userUid, "emotion_tally");
+        const q = query(emotionRef, orderBy("count", "desc"), limit(5));
+        const querySnapshot = await getDocs(q);
+
+        let emotions = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          // ...doc.data(), //fetch all data
+          count: doc.data().count,
+        }));
+
+        while (emotions.length < 5) {
+          emotions.push({ id: "N/A", count: 0 });
+        }
+
+        setTopEmotions(emotions);
+        // console.log("Top 5 emotions: ", emotions);
+      } catch (error) {
+        console.error("Error fetching top emotions:", error);
+      }
+    };
+
+    if (userUid) {
+      fetchTopEmotions();
+    }
+  }, [db, userUid]); // Runs when db or userUid changes
+
+  // Add this useEffect to map topEmotions to circles whenever topEmotions changes
+  useEffect(() => {
+    if (topEmotions.length > 0) {
+      // Create a size scale based on the emotion count
+      const maxSize = 160;
+      const minSize = 80;
+
+      // Find the highest count for scaling (if all counts are 0, use 1 to avoid division by zero)
+      const maxCount = Math.max(
+        ...topEmotions.map((emotion) => emotion.count),
+        1
+      );
+
+      const mappedCircles = topEmotions.map((emotion, index) => {
+        // Set size to 0 for N/A emotions to hide them
+        if (emotion.id === "N/A") {
+          return {
+            text: "",
+            size: 0,
+            value: 0
+          };
+        }
+        
+        // Calculate size based on count (higher count = larger circle)
+        const size =
+          emotion.count === 0
+            ? minSize
+            : minSize + (maxSize - minSize) * (emotion.count / maxCount);
+
+        return {
+          text: emotion.id,
+          size: Math.round(size),
+          value: emotion.count,
+        };
+        
+      });
+
+      setCircles(mappedCircles);
+    }
+  }, [topEmotions]);
+
+// Fetch reasons from Firestore when selectedCircle changes
+useEffect(() => {
+  if (selectedCircle) {
+    const fetchReasons = async () => {
+      try {
+        const reasonsRef = doc(
+          db,
+          "users",
+          userUid,  // Replace with the actual user UID
+          "emotion_tally",
+          selectedCircle.text
+        );
+
+        const reasonDoc = await getDoc(reasonsRef);
+        
+        if (reasonDoc.exists()) {
+          const reasonsData = reasonDoc.data().reasons;
+          setReasons(reasonsData);  // Update state with reasons
+          console.log('Reasons: ', reasonsData);
+        } else {
+          console.log("No reasons found for the selected circle.");
+        }
+      } catch (error) {
+        console.error("Error fetching reasons: ", error);
+      }
+    };
+
+    fetchReasons();
+  }
+}, [selectedCircle]);  // Runs the effect when selectedCircle changes
 
   useEffect(() => {
     const fetchData = async () => {
@@ -48,6 +164,8 @@ export default function Profile() {
         } else {
           setMemo(memo);
         }
+
+
 
         //FETCH QUEST COUNTS
         const meditateRef = doc(
@@ -120,13 +238,17 @@ export default function Profile() {
     };
     fetchData();
   }, []);
-  const circles = [
-    { text: "happy", size: 160, value: 5 },
-    { text: "calm", size: 140, value: 4 },
-    { text: "anxious", size: 120, value: 3 },
-    { text: "tired", size: 100, value: 2 },
-    { text: "excited", size: 80, value: 1 },
-  ];
+
+  //hardcoded data for initial testing
+  // const circles = [
+  //   { text: "happy", size: 160, value: 5 },
+  //   { text: "calm", size: 140, value: 4 },
+  //   { text: "anxious", size: 120, value: 3 },
+  //   { text: "tired", size: 100, value: 2 },
+  //   { text: "excited", size: 80, value: 1 },
+  // ];
+
+
   return (
     <View style={{ flex: 1 }}>
       <ScrollView
@@ -226,11 +348,15 @@ export default function Profile() {
                     width: "100%", // Make sure parent has full width
                   }}
                 >
-                  <CircleArrangement
-                    circles={circles}
-                    selectedCircle={selectedCircle}
-                    onSelect={handleSelect}
-                  />
+                  {circles.length > 0 ? (
+                    <CircleArrangement
+                      circles={circles}
+                      selectedCircle={selectedCircle}
+                      onSelect={handleSelect}
+                    />
+                  ) : (
+                    <Text>Loading emotions...</Text>
+                  )}
                 </View>
                 <View
                   style={{
@@ -239,10 +365,66 @@ export default function Profile() {
                     borderRadius: 16,
                   }}
                 >
-                  <Text style={[globalStyles.pBold, {marginBottom: 16}]}>
-                    Keywords recorded with  <Text style={{color: COLORS.green}}>______</Text>
-                  </Text>
-                  <Chip style={{backgroundColor: COLORS.white,alignSelf: "flex-start"}} textStyle={{ color: COLORS.blackSecondary }} >Tap on an emotion!</Chip>
+                  {/* <Text style={[globalStyles.pBold, { marginBottom: 16 }]}>
+                    Keywords recorded with{" "}
+                    <Text style={{ color: COLORS.green }}>______</Text>
+                  </Text> */}
+                  {selectedCircle != null ? (
+                    // reasons.map((reason,index)=> (<Chip>{reason}</Chip>))
+                    <>
+                      {" "}
+                      <Text style={[globalStyles.pBold, { marginBottom: 16 }]}>
+                        Keywords recorded with{" "}
+                        <Text style={{ color: COLORS.green }}>{selectedCircle.text}</Text>
+                      </Text>
+                      <View
+                        style={[
+                          { flexWrap: "wrap" },
+                          globalStyles.gap10,
+                          globalStyles.row,
+                        ]}
+                      >
+                        {reasons.map((reason, index) => (
+                        <Chip
+                          style={{
+                            backgroundColor: COLORS.white,
+                            alignSelf: "flex-start",
+                          }}
+                          textStyle={{ color: COLORS.blackSecondary }}
+                        >
+                          {reason}
+                        </Chip>
+                         ))}
+             
+                      </View>
+                    </>
+                  ) : (
+                    <>
+                      {" "}
+                      <Text style={[globalStyles.pBold, { marginBottom: 16 }]}>
+                        Keywords recorded with{" "}
+                        <Text style={{ color: COLORS.green }}>______</Text>
+                      </Text>
+                      <Chip
+                        style={{
+                          backgroundColor: COLORS.white,
+                          alignSelf: "flex-start",
+                        }}
+                        textStyle={{ color: COLORS.blackSecondary }}
+                      >
+                        Tap on an emotion!
+                      </Chip>
+                    </>
+                  )}
+                  {/* <Chip
+                    style={{
+                      backgroundColor: COLORS.white,
+                      alignSelf: "flex-start",
+                    }}
+                    textStyle={{ color: COLORS.blackSecondary }}
+                  >
+                    Tap on an emotion!
+                  </Chip> */}
                 </View>
               </View>
             </View>

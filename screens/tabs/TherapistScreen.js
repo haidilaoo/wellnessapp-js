@@ -6,7 +6,6 @@ import { useNavigation } from '@react-navigation/native';
 
 export default function TherapistScreen() {
 
-
 const auth = getAuth();
 
 const logout = async () => {
@@ -22,7 +21,7 @@ const navigation = useNavigation();
 
   return (
     <View style={styles.container}>
-      <Text>Therapist Screen</Text>
+      <Text>Community Screen</Text>
       <Button onPress={ () => {logout(); navigation.reset({
           index: 0,
           routes: [{ name: 'AuthFlow' }],

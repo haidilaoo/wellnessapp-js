@@ -132,6 +132,14 @@ export default function askEmotion({ navigation }) {
               onScroll={handleScrollChange}
             >
               <View style={[globalStyles.gap32, globalStyles.row]}>
+              <EmotionButton
+                  title="angry"
+                  emotion="angry"
+                  state={selectedEmotion === "angry"}
+                  onPress={() => {
+                    setSelectedEmotion("angry");
+                  }}
+                />
                 <EmotionButton
                   title="meh"
                   emotion="meh"
@@ -146,6 +154,14 @@ export default function askEmotion({ navigation }) {
                   state={selectedEmotion === "silly"}
                   onPress={() => {
                     setSelectedEmotion("silly");
+                  }}
+                />
+                        <EmotionButton
+                  title="cute"
+                  emotion="cute"
+                  state={selectedEmotion === "cute"}
+                  onPress={() => {
+                    setSelectedEmotion("cute");
                   }}
                 />
                 <EmotionButton
