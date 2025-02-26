@@ -59,13 +59,20 @@ export default function CommunityScreen() {
           message: doc.data().message,
           name: doc.data().name,
           topicCategory: doc.data().topicCategory,
-          rawTimestamp: doc.data().timestamp, // Store raw timestamp for relative time updates
+          rawTimestamp: doc.data().timestamp, // Store raw timestamp for sorting and updates
           timestamp: doc.data().timestamp 
             ? formatRelativeTime(doc.data().timestamp) // Format with our helper function
             : "Unknown time", // Fallback if timestamp is missing
+          createdAt: doc.data().timestamp 
+            ? new Date(doc.data().timestamp.seconds * 1000) // Convert to Date for sorting
+            : new Date(0), // Default to epoch start for unknown dates
         }));
-        setPosts(postData);
-        console.log('Posts:', postData);
+        
+        // Sort posts by timestamp (newest first)
+        const sortedPosts = postData.sort((a, b) => b.createdAt - a.createdAt);
+        
+        setPosts(sortedPosts);
+        console.log('Sorted Posts:', sortedPosts);
       } catch (error) {
         console.error('Error fetching posts:', error);
       }
@@ -82,6 +89,8 @@ export default function CommunityScreen() {
             ? formatRelativeTime(post.rawTimestamp)
             : "Unknown time"
         }))
+        // Maintain sorting when updating timestamps
+        .sort((a, b) => b.createdAt - a.createdAt)
       );
     }, 60000); // Update every minute
     
