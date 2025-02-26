@@ -9,28 +9,45 @@ import Icon from "react-native-vector-icons/Feather";
 import { db } from "../../firebaseConfig";
 import { collection, getDoc, getDocs } from "firebase/firestore";
 
+// Helper function to format timestamps in a Reddit-like style
+const formatRelativeTime = (timestamp) => {
+  if (!timestamp) return "Unknown time";
+  
+  // Convert Firestore timestamp to JavaScript Date
+  const postDate = new Date(timestamp.seconds * 1000);
+  const now = new Date();
+  
+  // Calculate the difference in milliseconds
+  const diffMs = now - postDate;
+  const diffSeconds = Math.floor(diffMs / 1000);
+  const diffMinutes = Math.floor(diffSeconds / 60);
+  const diffHours = Math.floor(diffMinutes / 60);
+  const diffDays = Math.floor(diffHours / 24);
+  
+  // Format based on how old the post is
+  if (diffMinutes < 1) {
+    return "just now";
+  } else if (diffMinutes < 60) {
+    return `${diffMinutes}m`;
+  } else if (diffHours < 24) {
+    return `${diffHours}h`;
+  } else if (diffDays < 7) {
+    return `${diffDays}d`;
+  } else {
+    // For posts older than a week, use date format: 26 Feb
+    return postDate.toLocaleDateString('en-US', {
+      day: 'numeric',
+      month: 'short'
+    });
+  }
+};
+
 export default function CommunityScreen() {
   const navigation = useNavigation();
   const [posts, setPosts] = useState([]);
   const [message, setMessage] = useState();
   const [name, setName] = useState();
   const [timestamp, setTimestamp] = useState();
-
-  // useEffect (() => {
-  //   const fetchPosts = async () => {
-  //     try {
-  //       const postRef = await getDocs(
-  //         collection(db, 'posts', '🌎 Main Lobby', 'posts')
-  //       );
-  //       const postMessage = postRef.docs.map((doc)=> doc.data().message);
-  //       setMessage(postMessage);
-  //       console.log('Message: ', postMessage);
-  //     } catch (error) {
-  //       console.error("Error fetching posts: ", error);
-  //     }
-  //   };
-  //   fetchPosts();
-  // }, []);
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -42,9 +59,10 @@ export default function CommunityScreen() {
           message: doc.data().message,
           name: doc.data().name,
           topicCategory: doc.data().topicCategory,
-          timestamp: doc.data().timestamp
-          ? new Date(doc.data().timestamp.seconds * 1000).toLocaleString() // Convert timestamp
-          : "Unknown time", // Fallback if timestamp is missing, // Assuming timestamp is stored in Firestore
+          rawTimestamp: doc.data().timestamp, // Store raw timestamp for relative time updates
+          timestamp: doc.data().timestamp 
+            ? formatRelativeTime(doc.data().timestamp) // Format with our helper function
+            : "Unknown time", // Fallback if timestamp is missing
         }));
         setPosts(postData);
         console.log('Posts:', postData);
@@ -54,6 +72,20 @@ export default function CommunityScreen() {
     };
   
     fetchPosts();
+    
+    // Optional: Update relative timestamps periodically
+    const timerId = setInterval(() => {
+      setPosts(currentPosts => 
+        currentPosts.map(post => ({
+          ...post,
+          timestamp: post.rawTimestamp 
+            ? formatRelativeTime(post.rawTimestamp)
+            : "Unknown time"
+        }))
+      );
+    }, 60000); // Update every minute
+    
+    return () => clearInterval(timerId); // Clean up on unmount
   }, []);
   
 
@@ -72,74 +104,6 @@ export default function CommunityScreen() {
           <View style={[globalStyles.gap24, { marginTop: 185 }]}>
             <Text style={globalStyles.h3}>Community</Text>
             <View style={globalStyles.gap24}>
-              {/* <View style={[globalStyles.gap24, styles.postContainer]}>
-                <View style={{ flexDirection: "row", gap: 12 }}>
-                  <Image
-                    source={require("../../assets/Avatar.png")}
-                    style={{
-                      width: 56,
-                      height: 56,
-                    }}
-                  ></Image>
-                  <View style={[{ flexDirection: "column" }]}>
-                    <Text style={globalStyles.pBold}>Nick tan</Text>
-                    <Text style={globalStyles.p}>topic category</Text>
-                  </View>
-                </View>
-                <Text style={[globalStyles.p, { color: COLORS.black }]}>
-                  Lorem ipsum dolor sit amet consectetur. Aliquet quam in
-                  pulvinar lacus a quis suscipit viverra. Sed et aliquam blandit
-                  urna vitae. Diam id ultricies nisl id nunc ultricies gravida
-                  elit. Venenatis ultrices mollis euismod orci turpis fames
-                  mauris cras purus. Aliquam ut lorem nunc est ut id. Vitae urna
-                  faucibus purus rhoncus. Vulputate enim nisi turpis ornare
-                  eget.
-                </Text>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      gap: 16,
-                      backgroundColor: "#F4F6F8",
-                      borderRadius: 16,
-                      padding: 16,
-                      alignSelf: "flex-start",
-                    }}
-                  >
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        gap: 8,
-                        alignItems: "center",
-                      }}
-                    >
-                      <Icon name="heart" size={24} color={"#b3b3b3"} />
-                      <Text style={[globalStyles.pBold, { color: "#b3b3b3" }]}>
-                        20
-                      </Text>
-                    </View>
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        gap: 8,
-                        alignItems: "center",
-                      }}
-                    >
-                      <Icon name="message-square" size={24} color={"#b3b3b3"} />
-                      <Text style={[globalStyles.pBold, { color: "#b3b3b3" }]}>
-                        20
-                      </Text>
-                    </View>
-                  </View>
-                  <Text style={globalStyles.p}>21h</Text>
-                </View>
-              </View> */}
               {posts.map((post) => (
               <View key={post.id} style={[globalStyles.gap24, styles.postContainer]}>
                 <View style={{ flexDirection: "row", gap: 12 }}>
