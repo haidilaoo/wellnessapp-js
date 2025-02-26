@@ -22,6 +22,7 @@
     "@rneui/themed": "^4.0.0-rc.8",
     "d3-hierarchy": "^3.1.2",
     "d3-scale": "^4.0.2",
+    "date-fns": "^4.1.0",
     "expo": "~52.0.26",
     "expo-font": "~13.0.3",
     "expo-modules-core": "~2.1.4",

@@ -85,10 +85,11 @@ export default function CreateName({ nickname, setNickname, navigation }) {
       <Button
         title="Explore Careot"
         style={{
-          width: bannerWidth,
+          width: '100%',
           position: "absolute",
-          bottom: 56 + 228,
+          bottom: -550,
           paddingHorizontal: 16,
+          
         }}
         onPress={async () => {
           await completeOnboarding();

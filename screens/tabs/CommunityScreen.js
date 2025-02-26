@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, Image } from "react-native";
 import { getAuth, signOut } from "firebase/auth";
 import { Button } from "react-native-elements";
@@ -6,9 +6,56 @@ import { CommonActions, useNavigation } from "@react-navigation/native";
 import { COLORS, globalStyles } from "../../globalStyles";
 import { Chip, FAB } from "react-native-paper";
 import Icon from "react-native-vector-icons/Feather";
+import { db } from "../../firebaseConfig";
+import { collection, getDoc, getDocs } from "firebase/firestore";
 
 export default function CommunityScreen() {
   const navigation = useNavigation();
+  const [posts, setPosts] = useState([]);
+  const [message, setMessage] = useState();
+  const [name, setName] = useState();
+  const [timestamp, setTimestamp] = useState();
+
+  // useEffect (() => {
+  //   const fetchPosts = async () => {
+  //     try {
+  //       const postRef = await getDocs(
+  //         collection(db, 'posts', '🌎 Main Lobby', 'posts')
+  //       );
+  //       const postMessage = postRef.docs.map((doc)=> doc.data().message);
+  //       setMessage(postMessage);
+  //       console.log('Message: ', postMessage);
+  //     } catch (error) {
+  //       console.error("Error fetching posts: ", error);
+  //     }
+  //   };
+  //   fetchPosts();
+  // }, []);
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const postRef = collection(db, 'posts', '🌎 Main Lobby', 'posts'); // Collection reference
+        const postSnapshot = await getDocs(postRef); // Fetch all documents
+        const postData = postSnapshot.docs.map((doc) => ({
+          id: doc.id, // Include document ID if needed
+          message: doc.data().message,
+          name: doc.data().name,
+          topicCategory: doc.data().topicCategory,
+          timestamp: doc.data().timestamp
+          ? new Date(doc.data().timestamp.seconds * 1000).toLocaleString() // Convert timestamp
+          : "Unknown time", // Fallback if timestamp is missing, // Assuming timestamp is stored in Firestore
+        }));
+        setPosts(postData);
+        console.log('Posts:', postData);
+      } catch (error) {
+        console.error('Error fetching posts:', error);
+      }
+    };
+  
+    fetchPosts();
+  }, []);
+  
 
   return (
     <View style={{ flex: 1 }}>
@@ -25,7 +72,7 @@ export default function CommunityScreen() {
           <View style={[globalStyles.gap24, { marginTop: 185 }]}>
             <Text style={globalStyles.h3}>Community</Text>
             <View style={globalStyles.gap24}>
-              <View style={[globalStyles.gap24, styles.postContainer]}>
+              {/* <View style={[globalStyles.gap24, styles.postContainer]}>
                 <View style={{ flexDirection: "row", gap: 12 }}>
                   <Image
                     source={require("../../assets/Avatar.png")}
@@ -92,8 +139,9 @@ export default function CommunityScreen() {
                   </View>
                   <Text style={globalStyles.p}>21h</Text>
                 </View>
-              </View>
-              <View style={[globalStyles.gap24, styles.postContainer]}>
+              </View> */}
+              {posts.map((post) => (
+              <View key={post.id} style={[globalStyles.gap24, styles.postContainer]}>
                 <View style={{ flexDirection: "row", gap: 12 }}>
                   <Image
                     source={require("../../assets/Avatar.png")}
@@ -103,14 +151,12 @@ export default function CommunityScreen() {
                     }}
                   ></Image>
                   <View style={[{ flexDirection: "column" }]}>
-                    <Text style={globalStyles.pBold}>Nick tan</Text>
-                    <Text style={globalStyles.p}>topic category</Text>
+                    <Text style={globalStyles.pBold}>{post.name}</Text>
+                    <Text style={globalStyles.p}>{post.topicCategory}</Text>
                   </View>
                 </View>
                 <Text style={[globalStyles.p, { color: COLORS.black }]}>
-                  Lorem ipsum dolor sit amet consectetur. Aliquet quam in
-                  pulvinar lacus a quis suscipit viverra. Sed et aliquam blandit
-                  eget.
+                {post.message}
                 </Text>
                 <View
                   style={{
@@ -154,9 +200,10 @@ export default function CommunityScreen() {
                       </Text>
                     </View>
                   </View>
-                  <Text style={globalStyles.p}>21h</Text>
+                  <Text style={globalStyles.p}>{post.timestamp}</Text>
                 </View>
               </View>
+              ))}
             </View>
           </View>
         </View>
