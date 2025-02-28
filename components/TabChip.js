@@ -2,11 +2,9 @@ import React, { useState } from "react";
 import { Chip } from "react-native-paper";
 import { COLORS, globalStyles } from "../globalStyles";
 
-const CustomChip = ({ label, onPress, isFocused }) => {
-    const [selected, setSelected] = useState(false);
+const TabChip = ({ label, onPress, isFocused,selected }) => {
+    // const [selected, setSelected] = useState(false); //remove local state change as this will allow multistate select
     
-
-  
     // If isFocused is true, force `selected` to be true to match the UI behavior
     const chipSelected = selected || isFocused;
 
@@ -17,7 +15,7 @@ const CustomChip = ({ label, onPress, isFocused }) => {
         showSelectedOverlay={true}
         mode="outlined"
         selected={chipSelected}
-        onPress={() =>{onPress(label); setSelected(!selected);}}
+        onPress={() =>{onPress();}}
         style={{
           backgroundColor: chipSelected ? COLORS.primary : "transparent", // ✅ Change fill color             
         //   borderWidth: selected ? 0 : 1, // Hide border when selected
@@ -30,4 +28,4 @@ const CustomChip = ({ label, onPress, isFocused }) => {
     );
   };
 
-  export default CustomChip;
+  export default TabChip;

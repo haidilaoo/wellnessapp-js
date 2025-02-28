@@ -148,19 +148,15 @@ export default function CommunityScreen() {
   }, []); // Empty dependency array to run only once
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, width: '100%'  }}>
       <ScrollView
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={[globalStyles.container, { flex: 1 }]}>
-          <Image
-            source={require("../../assets/topbanner-community.png")}
-            style={[globalStyles.topbanner, { marginTop: -100 }]}
-            resizeMode="contain"
-          />
-          <View style={[globalStyles.gap24, { marginTop: 185 }]}>
-            <Text style={globalStyles.h3}>Community</Text>
+        <View style={[globalStyles.container,{ flex: 1, paddingTop: 0}]}>
+         
+          <View style={[globalStyles.gap24, {}]}>
+            
 
             <View style={globalStyles.gap24}>
               {loading ? (
@@ -250,7 +246,7 @@ export default function CommunityScreen() {
           </View>
         </View>
       </ScrollView>
-      <FAB
+      {/* <FAB
         icon="plus"
         color="white" // Sets icon color
         style={{
@@ -263,7 +259,7 @@ export default function CommunityScreen() {
         onPress={() => {
           console.log("Pressed"), navigation.navigate("CreatePost");
         }}
-      />
+      /> */}
     </View>
   );
 }

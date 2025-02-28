@@ -28,10 +28,15 @@ import { doc, getDoc } from "firebase/firestore";
 import Profile from "./screens/tabs/Profile.js";
 import CommunityScreen from "./screens/tabs/CommunityScreen.js";
 import CreatePost from "./screens/CreatePost.js";
+import ExploreScreen from "./screens/tabs/ExploreScreen.js";
+import TabScreen from "./screens/tabs/Community/TabScreen.js";
 
 // Navigation Stacks
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
+// Create a Stack Navigator specifically for the Community tab
+const CommunityStack = createStackNavigator();
+
 
 // Authentication Flow
 const AuthFlow = () => {
@@ -113,6 +118,23 @@ const HomeScreenFlow = () => {
   );
 };
 
+const CommunityFlow = () => {
+  return (
+    <CommunityStack.Navigator>
+      <CommunityStack.Screen
+        name="CommunityMain"
+        component={CommunityScreen}
+        options={{ headerShown: false }}
+      />
+      <CommunityStack.Screen
+        name="Explore"
+        component={ExploreScreen} // Nested screen within Community tab
+        options={{ headerShown: false }}
+      />
+    </CommunityStack.Navigator>
+  );
+};
+
 // Main App Tabs (Logged-In)
 const MainAppFlow = () => {
   return (
@@ -129,12 +151,17 @@ const MainAppFlow = () => {
       />
       <Tab.Screen
         name="Community"
-        component={CommunityScreen}
+        component={CommunityFlow}
         options={{ headerShown: false }}
       />
       <Tab.Screen
         name="Profile"
         component={Profile}
+        options={{ headerShown: false }}
+      />
+      <Tab.Screen
+        name="Tab"
+        component={TabScreen}
         options={{ headerShown: false }}
       />
     </Tab.Navigator>

@@ -31,7 +31,14 @@ export default function askReason({navigation}) {
   const [selectedReason, setSelectedReason] = useState([]);
   const [memo, setMemo] = useState(null);
   const userUid = getAuth().currentUser.uid;
-  
+
+  const handleChipPress = (label) => {
+    setSelectedReason((prevReasons) =>
+      prevReasons.includes(label)
+        ? prevReasons.filter((reason) => reason !== label) // Deselect
+        : [...prevReasons, label] // Select
+    );
+  };
   const insertMemoToDatabase = async () => {
     try {
       await setDoc(doc(db, "users", userUid),
@@ -182,7 +189,7 @@ const navigateToMainScreen = () => {
               >
                 <CustomChip
                   label="people"
-                  onPress={(label) => {
+                  onPress={(label) => { 
                     setSelectedReason((prevReasons) => [...prevReasons, label]);
                   }}
                 />
@@ -224,7 +231,7 @@ const navigateToMainScreen = () => {
                 />
                 <CustomChip
                   label="health"
-                  onPress={(label) => {
+                  onPress={(label) => { 
                     setSelectedReason((prevReasons) => [...prevReasons, label]);
                   }}
                 />

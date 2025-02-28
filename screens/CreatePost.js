@@ -226,7 +226,7 @@ export default function CreatePost() {
                   </Pressable>
                   <Pressable
                     onPress={() => {
-                      setTopic(" 💭 Deep Talks & Feels");
+                      setTopic("💭 Deep Talks & Feels");
                       hideModal();
                     }}
                     style={styles.pillBtn}
