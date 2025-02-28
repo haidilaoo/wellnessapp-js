@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, ScrollView, Image } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Image,
+  Pressable,
+} from "react-native";
 import { getAuth, signOut } from "firebase/auth";
 import { Button } from "react-native-elements";
 import {
@@ -9,14 +16,20 @@ import {
 } from "@react-navigation/native";
 import { COLORS, globalStyles } from "../../globalStyles";
 import { Chip, FAB } from "react-native-paper";
-import Icon from "react-native-vector-icons/Feather";
+import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { db } from "../../firebaseConfig";
 import {
   collection,
+  deleteDoc,
+  doc,
   getDoc,
   getDocs,
+  increment,
   onSnapshot,
   query,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
 } from "firebase/firestore";
 
 // Helper function to format timestamps in a Reddit-like style
@@ -57,7 +70,82 @@ export default function CommunityScreen() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState([]);
+  const [heart, setHeart] = useState({}); // Object to track liked posts
+  const [likes, setLikes] = useState({}); // Store likes count separately
+  // Get current user UID
+  const userUid = getAuth().currentUser.uid;
 
+  const toggleLike = async (postId, categoryName) => {
+      try {
+        setHeart((prevHeart) => {
+          const newHeartState = !prevHeart[postId];
+    
+          // Optimistically update likes count without Firestore
+          setLikes((prevLikes) => ({
+            ...prevLikes,
+            [postId]: newHeartState ? (prevLikes[postId] || 0) + 1 : (prevLikes[postId] || 0) - 1,
+          }));
+    
+          return { ...prevHeart, [postId]: newHeartState };
+        });
+    
+        const likeRef = doc(db, "posts", categoryName, "posts", postId, "likes", userUid);
+        const likeDoc = await getDoc(likeRef);
+        const isCurrentlyLiked = likeDoc.exists();
+    
+        if (isCurrentlyLiked) {
+          await deleteDoc(likeRef);
+        } else {
+          await setDoc(likeRef, { liked: true, timestamp: serverTimestamp() });
+        }
+    
+        // Update Firestore like count in the background
+        const postRef = doc(db, "posts", categoryName, "posts", postId);
+        await updateDoc(postRef, {
+          likes: isCurrentlyLiked ? increment(-1) : increment(1),
+          last_updated: serverTimestamp(),
+        });
+    
+      } catch (error) {
+        console.error("Error toggling like:", error);
+      }
+    };
+
+  // Fetch user's likes when posts are loaded
+  useEffect(() => {
+    const fetchUserLikes = async () => {
+      if (posts.length === 0) return;
+
+      try {
+        const likedPosts = {};
+        const likeCounts = {}; // Store likes count separately
+  
+        // Check each post to see if the current user has liked it
+        for (const post of posts) {
+          const likeRef = doc(
+            db,
+            "posts",
+            post.categoryName,
+            "posts",
+            post.id,
+            "likes",
+            userUid
+          );
+          const likeDoc = await getDoc(likeRef);
+          likedPosts[post.id] = likeDoc.exists();
+        }
+
+        setHeart(likedPosts);
+        setLikes(likeCounts); // Set likes count in a separate state
+      } catch (error) {
+        console.error("Error fetching likes:", error);
+      }
+    };
+
+    fetchUserLikes();
+  }, [posts]); // Run when posts change
+
+  // Initial data loading
   useEffect(() => {
     setLoading(true);
     setPosts([]);
@@ -90,6 +178,7 @@ export default function CommunityScreen() {
             name: doc.data().name,
             topicCategory: doc.data().topicCategory || categoryName,
             categoryName: categoryName, // Store the category name explicitly
+            likes: doc.data().likes || 0,
             rawTimestamp: doc.data().timestamp,
             timestamp: doc.data().timestamp
               ? formatRelativeTime(doc.data().timestamp)
@@ -148,16 +237,13 @@ export default function CommunityScreen() {
   }, []); // Empty dependency array to run only once
 
   return (
-    <View style={{ flex: 1, width: '100%'  }}>
+    <View style={{ flex: 1, width: "100%" }}>
       <ScrollView
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={[globalStyles.container,{ flex: 1, paddingTop: 0}]}>
-         
+        <View style={[globalStyles.container, { flex: 1, paddingTop: 0 }]}>
           <View style={[globalStyles.gap24, {}]}>
-            
-
             <View style={globalStyles.gap24}>
               {loading ? (
                 <Text style={globalStyles.p}>Loading posts...</Text>
@@ -166,7 +252,7 @@ export default function CommunityScreen() {
                   No posts yet. Be the first to post!
                 </Text>
               ) : (
-                posts.map((post) => (
+                posts.map((post, index) => (
                   <View
                     key={`${post.categoryName}-${post.id}`}
                     style={[globalStyles.gap24, styles.postContainer]}
@@ -204,20 +290,28 @@ export default function CommunityScreen() {
                           alignSelf: "flex-start",
                         }}
                       >
-                        <View
-                          style={{
-                            flexDirection: "row",
-                            gap: 8,
-                            alignItems: "center",
-                          }}
+                        <Pressable
+                          onPress={() => toggleLike(post.id, post.categoryName)}
                         >
-                          <Icon name="heart" size={24} color={"#b3b3b3"} />
-                          <Text
-                            style={[globalStyles.pBold, { color: "#b3b3b3" }]}
+                          <View
+                            style={{
+                              flexDirection: "row",
+                              gap: 8,
+                              alignItems: "center",
+                            }}
                           >
-                            20
-                          </Text>
-                        </View>
+                            <Icon
+                              name={heart[post.id] ? "heart" : "heart-outline"}
+                              color={heart[post.id] ? "#EC221F" : "#b3b3b3"}
+                              size={24}
+                            />
+                            <Text
+                              style={[globalStyles.pBold, { color: "#b3b3b3" }]}
+                            >
+                              {post.likes || 0}
+                            </Text>
+                          </View>
+                        </Pressable>
                         <View
                           style={{
                             flexDirection: "row",
@@ -226,7 +320,7 @@ export default function CommunityScreen() {
                           }}
                         >
                           <Icon
-                            name="message-square"
+                            name="comment-outline"
                             size={24}
                             color={"#b3b3b3"}
                           />
@@ -246,20 +340,6 @@ export default function CommunityScreen() {
           </View>
         </View>
       </ScrollView>
-      {/* <FAB
-        icon="plus"
-        color="white" // Sets icon color
-        style={{
-          position: "absolute",
-          margin: 16,
-          right: 0,
-          bottom: 0,
-          backgroundColor: COLORS.primary, // FAB background color
-        }}
-        onPress={() => {
-          console.log("Pressed"), navigation.navigate("CreatePost");
-        }}
-      /> */}
     </View>
   );
 }

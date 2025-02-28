@@ -70,6 +70,7 @@ export default function CreatePost() {
         message: message,
         timestamp: serverTimestamp(),
         topicCategory: topic,
+        likes: 0,
       });
       console.log("New post inserted into database.");
     } catch (error) {
