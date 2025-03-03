@@ -30,6 +30,7 @@ import CommunityScreen from "./screens/tabs/CommunityScreen.js";
 import CreatePost from "./screens/CreatePost.js";
 import ExploreScreen from "./screens/tabs/ExploreScreen.js";
 import TabScreen from "./screens/tabs/Community/TabScreen.js";
+import PostScreen from "./screens/tabs/PostScreen.js";
 
 // Navigation Stacks
 const Tab = createBottomTabNavigator();
@@ -149,11 +150,11 @@ const MainAppFlow = () => {
         component={TherapistScreen}
         options={{ headerShown: false }}
       />
-      <Tab.Screen
+      {/* <Tab.Screen
         name="Community"
         component={CommunityFlow}
         options={{ headerShown: false }}
-      />
+      /> */}
       <Tab.Screen
         name="Profile"
         component={Profile}

@@ -54,29 +54,55 @@ export default function CreatePost() {
   const [topic, setTopic] = useState("🌎 Main Lobby");
   const userUid = getAuth().currentUser.uid;
 
+  //OLD NESTING STRUCTURE
+  // const insertPostToDatabase = async () => {
+  //   try {
+  //     const userDocRef = doc(db, "users", userUid);
+  //     const userDocSnap = await getDoc(userDocRef);
+
+  //     // Ensure document exists before accessing data
+  //     const name = userDocSnap.exists()
+  //       ? userDocSnap.data().nickname
+  //       : "Unknown";
+  //     const postRef = doc(collection(db, "posts", topic, "posts"));
+  //     await setDoc(postRef, {
+  //       user: userUid,
+  //       name: name,
+  //       message: message,
+  //       timestamp: serverTimestamp(),
+  //       topicCategory: topic,
+  //       likes: 0,
+  //     });
+  //     console.log("New post inserted into database.");
+  //   } catch (error) {
+  //     console.error("Error inserting new post into database.", error);
+  //   }
+  // };
+
   const insertPostToDatabase = async () => {
     try {
       const userDocRef = doc(db, "users", userUid);
       const userDocSnap = await getDoc(userDocRef);
-
-      // Ensure document exists before accessing data
-      const name = userDocSnap.exists()
-        ? userDocSnap.data().nickname
-        : "Unknown";
-      const postRef = doc(collection(db, "posts", topic, "posts"));
-      await setDoc(postRef, {
+  
+      // Ensure the user document exists before accessing data
+      const name = userDocSnap.exists() ? userDocSnap.data().nickname : "Unknown";
+  
+      // Reference to the top-level "posts" collection
+      const postRef = await addDoc(collection(db, "posts"), {
         user: userUid,
         name: name,
         message: message,
         timestamp: serverTimestamp(),
-        topicCategory: topic,
+        topicCategory: topic, // Now stored as a field instead of being a subcollection
         likes: 0,
       });
-      console.log("New post inserted into database.");
+  
+      console.log("New post inserted into database with ID:", postRef.id);
     } catch (error) {
-      console.error("Error inserting new post into database.", error);
+      console.error("Error inserting new post into database:", error);
     }
   };
+  
 
   const [visible, setVisible] = React.useState(false);
   const showModal = () => setVisible(true);

@@ -75,167 +75,284 @@ export default function CommunityScreen() {
   // Get current user UID
   const userUid = getAuth().currentUser.uid;
 
-  const toggleLike = async (postId, categoryName) => {
-      try {
-        setHeart((prevHeart) => {
-          const newHeartState = !prevHeart[postId];
+  //OLD STRUCTURE
+  // const toggleLike = async (postId, categoryName) => {
+  //     try {
+  //       setHeart((prevHeart) => {
+  //         const newHeartState = !prevHeart[postId];
     
-          // Optimistically update likes count without Firestore
-          setLikes((prevLikes) => ({
-            ...prevLikes,
-            [postId]: newHeartState ? (prevLikes[postId] || 0) + 1 : (prevLikes[postId] || 0) - 1,
-          }));
+  //         // Optimistically update likes count without Firestore
+  //         setLikes((prevLikes) => ({
+  //           ...prevLikes,
+  //           [postId]: newHeartState ? (prevLikes[postId] || 0) + 1 : (prevLikes[postId] || 0) - 1,
+  //         }));
     
-          return { ...prevHeart, [postId]: newHeartState };
-        });
+  //         return { ...prevHeart, [postId]: newHeartState };
+  //       });
     
-        const likeRef = doc(db, "posts", categoryName, "posts", postId, "likes", userUid);
-        const likeDoc = await getDoc(likeRef);
-        const isCurrentlyLiked = likeDoc.exists();
+  //       const likeRef = doc(db, "posts", categoryName, "posts", postId, "likes", userUid);
+  //       const likeDoc = await getDoc(likeRef);
+  //       const isCurrentlyLiked = likeDoc.exists();
     
-        if (isCurrentlyLiked) {
-          await deleteDoc(likeRef);
-        } else {
-          await setDoc(likeRef, { liked: true, timestamp: serverTimestamp() });
-        }
+  //       if (isCurrentlyLiked) {
+  //         await deleteDoc(likeRef);
+  //       } else {
+  //         await setDoc(likeRef, { liked: true, timestamp: serverTimestamp() });
+  //       }
     
-        // Update Firestore like count in the background
-        const postRef = doc(db, "posts", categoryName, "posts", postId);
-        await updateDoc(postRef, {
-          likes: isCurrentlyLiked ? increment(-1) : increment(1),
-          last_updated: serverTimestamp(),
-        });
+  //       // Update Firestore like count in the background
+  //       const postRef = doc(db, "posts", categoryName, "posts", postId);
+  //       await updateDoc(postRef, {
+  //         likes: isCurrentlyLiked ? increment(-1) : increment(1),
+  //         last_updated: serverTimestamp(),
+  //       });
     
-      } catch (error) {
-        console.error("Error toggling like:", error);
-      }
-    };
+  //     } catch (error) {
+  //       console.error("Error toggling like:", error);
+  //     }
+  //   };
 
   // Fetch user's likes when posts are loaded
+  const toggleLike = async (postId) => {
+    try {
+      setHeart((prevHeart) => {
+        const newHeartState = !prevHeart[postId];
+  
+        // Optimistically update likes count without Firestore
+        setLikes((prevLikes) => ({
+          ...prevLikes,
+          [postId]: newHeartState ? (prevLikes[postId] || 0) + 1 : (prevLikes[postId] || 0) - 1,
+        }));
+  
+        return { ...prevHeart, [postId]: newHeartState };
+      });
+  
+      const likeRef = doc(db, "posts", postId, "likes", userUid);
+      const likeDoc = await getDoc(likeRef);
+      const isCurrentlyLiked = likeDoc.exists();
+  
+      if (isCurrentlyLiked) {
+        await deleteDoc(likeRef);
+      } else {
+        await setDoc(likeRef, { liked: true, timestamp: serverTimestamp() });
+      }
+  
+      // Update the like count in Firestore
+      const postRef = doc(db, "posts", postId);
+      await updateDoc(postRef, {
+        likes: isCurrentlyLiked ? increment(-1) : increment(1),
+        last_updated: serverTimestamp(),
+      });
+  
+    } catch (error) {
+      console.error("Error toggling like:", error);
+    }
+  };
+  //OLD STRUCTURE
+  // useEffect(() => {
+  //   const fetchUserLikes = async () => {
+  //     if (posts.length === 0) return;
+
+  //     try {
+  //       const likedPosts = {};
+  //       const likeCounts = {}; // Store likes count separately
+  
+  //       // Check each post to see if the current user has liked it
+  //       for (const post of posts) {
+  //         const likeRef = doc(
+  //           db,
+  //           "posts",
+  //           post.categoryName,
+  //           "posts",
+  //           post.id,
+  //           "likes",
+  //           userUid
+  //         );
+  //         const likeDoc = await getDoc(likeRef);
+  //         likedPosts[post.id] = likeDoc.exists();
+  //       }
+
+  //       setHeart(likedPosts);
+  //       setLikes(likeCounts); // Set likes count in a separate state
+  //     } catch (error) {
+  //       console.error("Error fetching likes:", error);
+  //     }
+  //   };
+
+  //   fetchUserLikes();
+  // }, [posts]); // Run when posts change
+
+  // OLD STRUCTURE
+  // useEffect(() => {
+  //   setLoading(true);
+  //   setPosts([]);
+
+  //   // Known category names
+  //   const categoryNames = [
+  //     "💭 Deep Talks & Feels",
+  //     "🌎 Main Lobby",
+  //     "😩 Vent & Rant",
+  //     "🚩 Toxic or Nah?",
+  //     "🤔 Need Advice?",
+  //   ];
+
+  //   setCategories(categoryNames);
+  //   const listeners = [];
+
+  //   // Set up listeners for each category
+  //   categoryNames.forEach((categoryName) => {
+  //     console.log(`Setting up listener for category: ${categoryName}`);
+
+  //     const postsRef = collection(db, "posts", categoryName, "posts");
+  //     const q = query(postsRef);
+
+  //     const unsubscribe = onSnapshot(
+  //       q,
+  //       (snapshot) => {
+  //         const categoryPosts = snapshot.docs.map((doc) => ({
+  //           id: doc.id,
+  //           message: doc.data().message,
+  //           name: doc.data().name,
+  //           topicCategory: doc.data().topicCategory || categoryName,
+  //           categoryName: categoryName, // Store the category name explicitly
+  //           likes: doc.data().likes || 0,
+  //           rawTimestamp: doc.data().timestamp,
+  //           timestamp: doc.data().timestamp
+  //             ? formatRelativeTime(doc.data().timestamp)
+  //             : "Unknown time",
+  //           createdAt: doc.data().timestamp
+  //             ? new Date(doc.data().timestamp.seconds * 1000)
+  //             : new Date(0),
+  //         }));
+
+  //         console.log(
+  //           `Received ${categoryPosts.length} posts from ${categoryName}`
+  //         );
+
+  //         // Update posts state - merge with existing posts
+  //         setPosts((currentPosts) => {
+  //           // Remove any existing posts from this category
+  //           const filteredPosts = currentPosts.filter(
+  //             (post) => post.categoryName !== categoryName
+  //           );
+
+  //           // Add new posts from this category
+  //           const newPosts = [...filteredPosts, ...categoryPosts];
+
+  //           // Sort all posts by timestamp (newest first)
+  //           return newPosts.sort((a, b) => b.createdAt - a.createdAt);
+  //         });
+
+  //         setLoading(false);
+  //       },
+  //       (error) => {
+  //         console.error(`Error in ${categoryName} listener:`, error);
+  //       }
+  //     );
+
+  //     listeners.push(unsubscribe);
+  //   });
+
+  //   // Set up interval to update relative timestamps
+  //   const timerId = setInterval(() => {
+  //     setPosts((currentPosts) =>
+  //       currentPosts.map((post) => ({
+  //         ...post,
+  //         timestamp: post.rawTimestamp
+  //           ? formatRelativeTime(post.rawTimestamp)
+  //           : "Unknown time",
+  //       }))
+  //     );
+  //   }, 60000); // Update every minute
+
+  //   // Clean up listeners when component unmounts
+  //   return () => {
+  //     console.log("Cleaning up listeners");
+  //     listeners.forEach((unsubscribe) => unsubscribe());
+  //     clearInterval(timerId);
+  //   };
+  // }, []); // Empty dependency array to run only once
   useEffect(() => {
     const fetchUserLikes = async () => {
       if (posts.length === 0) return;
-
+  
       try {
         const likedPosts = {};
         const likeCounts = {}; // Store likes count separately
   
-        // Check each post to see if the current user has liked it
-        for (const post of posts) {
-          const likeRef = doc(
-            db,
-            "posts",
-            post.categoryName,
-            "posts",
-            post.id,
-            "likes",
-            userUid
-          );
+        // Fetch likes for each post in parallel
+        const likePromises = posts.map(async (post) => {
+          const likeRef = doc(db, "posts", post.id, "likes", userUid);
           const likeDoc = await getDoc(likeRef);
+  
+          // Store whether the user liked this post
           likedPosts[post.id] = likeDoc.exists();
-        }
-
+  
+          // Fetch like count separately to avoid flickering
+          const postRef = doc(db, "posts", post.id);
+          const postDoc = await getDoc(postRef);
+          likeCounts[post.id] = postDoc.exists() ? postDoc.data().likes || 0 : 0;
+        });
+  
+        await Promise.all(likePromises); // Wait for all like checks to complete
+  
         setHeart(likedPosts);
-        setLikes(likeCounts); // Set likes count in a separate state
+        setLikes(likeCounts); // Set likes count separately if needed
       } catch (error) {
         console.error("Error fetching likes:", error);
       }
     };
-
+  
     fetchUserLikes();
   }, [posts]); // Run when posts change
-
-  // Initial data loading
+  
+  
+  
   useEffect(() => {
     setLoading(true);
     setPosts([]);
-
-    // Known category names
-    const categoryNames = [
-      "💭 Deep Talks & Feels",
-      "🌎 Main Lobby",
-      "😩 Vent & Rant",
-      "🚩 Toxic or Nah?",
-      "🤔 Need Advice?",
-    ];
-
-    setCategories(categoryNames);
-    const listeners = [];
-
-    // Set up listeners for each category
-    categoryNames.forEach((categoryName) => {
-      console.log(`Setting up listener for category: ${categoryName}`);
-
-      const postsRef = collection(db, "posts", categoryName, "posts");
-      const q = query(postsRef);
-
-      const unsubscribe = onSnapshot(
-        q,
-        (snapshot) => {
-          const categoryPosts = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            message: doc.data().message,
-            name: doc.data().name,
-            topicCategory: doc.data().topicCategory || categoryName,
-            categoryName: categoryName, // Store the category name explicitly
-            likes: doc.data().likes || 0,
-            rawTimestamp: doc.data().timestamp,
-            timestamp: doc.data().timestamp
-              ? formatRelativeTime(doc.data().timestamp)
-              : "Unknown time",
-            createdAt: doc.data().timestamp
-              ? new Date(doc.data().timestamp.seconds * 1000)
-              : new Date(0),
-          }));
-
-          console.log(
-            `Received ${categoryPosts.length} posts from ${categoryName}`
-          );
-
-          // Update posts state - merge with existing posts
-          setPosts((currentPosts) => {
-            // Remove any existing posts from this category
-            const filteredPosts = currentPosts.filter(
-              (post) => post.categoryName !== categoryName
-            );
-
-            // Add new posts from this category
-            const newPosts = [...filteredPosts, ...categoryPosts];
-
-            // Sort all posts by timestamp (newest first)
-            return newPosts.sort((a, b) => b.createdAt - a.createdAt);
-          });
-
-          setLoading(false);
-        },
-        (error) => {
-          console.error(`Error in ${categoryName} listener:`, error);
-        }
-      );
-
-      listeners.push(unsubscribe);
-    });
-
-    // Set up interval to update relative timestamps
-    const timerId = setInterval(() => {
-      setPosts((currentPosts) =>
-        currentPosts.map((post) => ({
-          ...post,
-          timestamp: post.rawTimestamp
-            ? formatRelativeTime(post.rawTimestamp)
+  
+    // Set up a real-time listener on the "posts" collection
+    const postsRef = collection(db, "posts");
+    const q = query(postsRef); // Modify if you want ordering (e.g., orderBy("timestamp", "desc"))
+  
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const allPosts = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          message: doc.data().message,
+          name: doc.data().name,
+          topicCategory: doc.data().topicCategory, // Now stored as a field
+          likes: doc.data().likes || 0,
+          rawTimestamp: doc.data().timestamp,
+          timestamp: doc.data().timestamp
+            ? formatRelativeTime(doc.data().timestamp)
             : "Unknown time",
-        }))
-      );
-    }, 60000); // Update every minute
-
-    // Clean up listeners when component unmounts
+          createdAt: doc.data().timestamp
+            ? new Date(doc.data().timestamp.seconds * 1000)
+            : new Date(0),
+        }));
+  
+        console.log(`Received ${allPosts.length} posts`);
+  
+        // Sort all posts by timestamp (newest first)
+        setPosts(allPosts.sort((a, b) => b.createdAt - a.createdAt));
+        setLoading(false);
+      },
+      (error) => {
+        console.error("Error fetching posts:", error);
+        setLoading(false);
+      }
+    );
+  
+    // Cleanup the listener when component unmounts
     return () => {
-      console.log("Cleaning up listeners");
-      listeners.forEach((unsubscribe) => unsubscribe());
-      clearInterval(timerId);
+      console.log("Cleaning up post listener");
+      unsubscribe();
     };
-  }, []); // Empty dependency array to run only once
-
+  }, []);
+  
   return (
     <View style={{ flex: 1, width: "100%" }}>
       <ScrollView
@@ -312,6 +429,7 @@ export default function CommunityScreen() {
                             </Text>
                           </View>
                         </Pressable>
+                        <Pressable onPress={() => navigation.navigate('PostScreen', { post, heart })}>
                         <View
                           style={{
                             flexDirection: "row",
@@ -330,6 +448,7 @@ export default function CommunityScreen() {
                             20
                           </Text>
                         </View>
+                        </Pressable>
                       </View>
                       <Text style={globalStyles.p}>{post.timestamp}</Text>
                     </View>

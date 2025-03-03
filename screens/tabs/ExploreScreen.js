@@ -30,6 +30,8 @@ import {
   updateDoc,
   deleteDoc,
   setDoc,
+  where,
+  orderBy,
 } from "firebase/firestore";
 
 // Helper function to format timestamps in a Reddit-like style
@@ -70,26 +72,18 @@ export default function ExploreScreen() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [heart, setHeart] = useState({}); // Use an object instead of an array
-  const [likes, setLikes] = useState({}); // Store likes count separately
 
   // Get current user UID
   const userUid = getAuth().currentUser.uid;
 
-  const toggleLike = async (postId, categoryName) => {
+  const toggleLike = async (postId) => {
     try {
       setHeart((prevHeart) => {
         const newHeartState = !prevHeart[postId];
-  
-        // Optimistically update likes count without Firestore
-        setLikes((prevLikes) => ({
-          ...prevLikes,
-          [postId]: newHeartState ? (prevLikes[postId] || 0) + 1 : (prevLikes[postId] || 0) - 1,
-        }));
-  
         return { ...prevHeart, [postId]: newHeartState };
       });
   
-      const likeRef = doc(db, "posts", categoryName, "posts", postId, "likes", userUid);
+      const likeRef = doc(db, "posts", postId, "likes", userUid);
       const likeDoc = await getDoc(likeRef);
       const isCurrentlyLiked = likeDoc.exists();
   
@@ -99,8 +93,8 @@ export default function ExploreScreen() {
         await setDoc(likeRef, { liked: true, timestamp: serverTimestamp() });
       }
   
-      // Update Firestore like count in the background
-      const postRef = doc(db, "posts", categoryName, "posts", postId);
+      // Update the like count in Firestore
+      const postRef = doc(db, "posts", postId);
       await updateDoc(postRef, {
         likes: isCurrentlyLiked ? increment(-1) : increment(1),
         last_updated: serverTimestamp(),
@@ -110,85 +104,78 @@ export default function ExploreScreen() {
       console.error("Error toggling like:", error);
     }
   };
-  
-
-  // Fetch user's likes when posts are loaded
   const fetchUserLikes = async () => {
     if (posts.length === 0) return;
-  
+
     try {
       const likedPosts = {};
-      const likeCounts = {}; // Store likes count separately
-  
-      for (const post of posts) {
-        const likeRef = doc(db, "posts", post.categoryName || "🌎 Main Lobby", "posts", post.id, "likes", userUid);
+
+      // Fetch likes for each post in parallel
+      const likePromises = posts.map(async (post) => {
+        const likeRef = doc(db, "posts", post.id, "likes", userUid);
         const likeDoc = await getDoc(likeRef);
+
+        // Store whether the user liked this post
         likedPosts[post.id] = likeDoc.exists();
-  
-        // Fetch likes count separately to avoid flickering
-        const postRef = doc(db, "posts", post.categoryName, "posts", post.id);
-        const postDoc = await getDoc(postRef);
-        likeCounts[post.id] = postDoc.exists() ? postDoc.data().likes || 0 : 0;
-      }
-  
+      });
+
+      await Promise.all(likePromises); // Wait for all like checks to complete
       setHeart(likedPosts);
-      setLikes(likeCounts); // Set likes count in a separate state
     } catch (error) {
       console.error("Error fetching likes:", error);
     }
   };
-  
   // Fetch likes only when posts are loaded
   useEffect(() => {
-    fetchUserLikes();
-  }, [posts]);
+
   
+    fetchUserLikes();
+
+  }, [posts]); // Run when posts change
 
   // Use a real-time listener for posts
   useEffect(() => {
     setLoading(true);
 
-    // Category we're displaying in this screen
-    const categoryName = "🌎 Main Lobby";
-
-    // Create a query to the posts collection
-    const postsRef = collection(db, "posts", categoryName, "posts");
-    const q = query(postsRef);
-
-    // Set up real-time listener
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const postData = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          message: doc.data().message,
-          name: doc.data().name,
-          topicCategory: doc.data().topicCategory || categoryName,
-          categoryName: categoryName, // Add explicit categoryName to each post
-          // likes: doc.data().likes || 0,
-          rawTimestamp: doc.data().timestamp,
-          timestamp: doc.data().timestamp
-            ? formatRelativeTime(doc.data().timestamp)
-            : "Unknown time",
-          createdAt: doc.data().timestamp
-            ? new Date(doc.data().timestamp.seconds * 1000)
-            : new Date(0),
-        }));
-
-        // Sort posts by timestamp (newest first)
-        const sortedPosts = postData.sort((a, b) => b.createdAt - a.createdAt);
-
-        setPosts(sortedPosts);
-        setLoading(false);
-        console.log("Real-time posts update:", sortedPosts);
-      },
-      (error) => {
-        console.error("Error in real-time posts listener:", error);
-        setLoading(false);
-      }
+    const postsRef = collection(db, "posts");
+    const q = query(
+      postsRef, 
+      where("topicCategory", "==", "🌎 Main Lobby"), 
+      orderBy("timestamp", "desc")
     );
 
-    // Also listen for when the screen comes into focus
+    // Set up real-time listener
+     const unsubscribe = onSnapshot(
+          q,
+          (snapshot) => {
+            const allPosts = snapshot.docs.map((doc) => ({
+              id: doc.id,
+              message: doc.data().message,
+              name: doc.data().name,
+              topicCategory: doc.data().topicCategory, // Now stored as a field
+              likes: doc.data().likes || 0,
+              rawTimestamp: doc.data().timestamp,
+              timestamp: doc.data().timestamp
+                ? formatRelativeTime(doc.data().timestamp)
+                : "Unknown time",
+              createdAt: doc.data().timestamp
+                ? new Date(doc.data().timestamp.seconds * 1000)
+                : new Date(0),
+            }));
+      
+            console.log(`Received ${allPosts.length} posts`);
+      
+            // Sort all posts by timestamp (newest first)
+            setPosts(allPosts.sort((a, b) => b.createdAt - a.createdAt));
+            setLoading(false);
+          },
+          (error) => {
+            console.error("Error fetching posts:", error);
+            setLoading(false);
+          }
+        );
+
+      // Also listen for when the screen comes into focus
     const onFocus = navigation.addListener("focus", () => {
       console.log("Explore screen is focused");
       // Refresh likes when screen is focused
@@ -241,7 +228,6 @@ export default function ExploreScreen() {
       clearInterval(timerId);
     };
   }, [navigation]);
-
   return (
     <View style={{ flex: 1 }}>
       <ScrollView
@@ -297,7 +283,7 @@ export default function ExploreScreen() {
                         }}
                       >
                         <Pressable
-                          onPress={() => toggleLike(post.id, post.categoryName)}
+                          onPress={() => toggleLike(post.id)}
                         >
                           <View
                             style={{
@@ -314,7 +300,7 @@ export default function ExploreScreen() {
                             <Text
                               style={[globalStyles.pBold, { color: "#b3b3b3" }]}
                             >
-                              {likes[post.id] || 0}
+                              {post.likes || 0}
                             </Text>
                           </View>
                         </Pressable>
@@ -346,20 +332,6 @@ export default function ExploreScreen() {
           </View>
         </View>
       </ScrollView>
-      <FAB
-        icon="plus"
-        color="white" // Sets icon color
-        style={{
-          position: "absolute",
-          margin: 16,
-          right: 0,
-          bottom: 0,
-          backgroundColor: COLORS.primary, // FAB background color
-        }}
-        onPress={() => {
-          console.log("Pressed"), navigation.navigate("CreatePost");
-        }}
-      />
     </View>
   );
 }

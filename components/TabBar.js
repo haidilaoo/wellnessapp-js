@@ -10,7 +10,7 @@ function TabBar({ state, descriptors, navigation, position }) {
   if (!state || !state.routes) return null;
 
   return (
-    <View style={{ flexDirection: 'row', }}>
+    <View style={{ flexDirection: 'row',backgroundColor: "#F5F6F6" }}>
       {state.routes.map((route, index) => {
         const { options } = descriptors[route.key] || {};
         const label = options?.tabBarLabel || options?.title || route.name;

@@ -2,16 +2,21 @@ import { ScrollView, StyleSheet, Text, View, Image } from "react-native";
 import React from "react";
 import { useNavigation } from "@react-navigation/native";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
+import { createStackNavigator } from "@react-navigation/stack";
 import FeedScreen from "../FeedScreen";
 import ExploreScreen from "../ExploreScreen";
 import TabBar from "../../../components/TabBar";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { COLORS, globalStyles } from "../../../globalStyles";
 import { FAB } from "react-native-paper";
+import PostScreen from "../PostScreen";
 
 export default function TabScreen() {
   const Tab = createMaterialTopTabNavigator();
+  const Stack = createStackNavigator();
   const navigation = useNavigation();
+
+
   const CommunityTabNavigator = () => {
     return (
       <Tab.Navigator
@@ -35,22 +40,25 @@ export default function TabScreen() {
         contentContainerStyle={{ flexGrow: 1, width: '100%' }}
         keyboardShouldPersistTaps="handled"
       > */}
-      <View style={[{ flex: 1, width: "100%" }]}>
+      <View style={[{ flex: 1, width: "100%", }]}>
         {/* <Image
             source={require("../../../assets/topbanner-community.png")}
             style={[globalStyles.topbanner, { marginTop: -100 }]}
             resizeMode="contain"
           /> */}
         <View
-          style={[
-            globalStyles.gap24,
-            { marginTop: 0, flex: 1, width: "100%" },
-          ]}
+          style={[globalStyles.gap24, { marginTop: 0, flex: 1, width: "100%" }]}
         >
           <Text style={[globalStyles.h3, { marginTop: 56, marginLeft: 16 }]}>
             Community
           </Text>
-          <CommunityTabNavigator />
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen
+              name="CommunityTabs"
+              component={CommunityTabNavigator}
+            />
+            <Stack.Screen name="PostScreen" component={PostScreen} />
+          </Stack.Navigator>
         </View>
       </View>
       {/* </ScrollView> */}
