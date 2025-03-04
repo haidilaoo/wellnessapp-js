@@ -154,6 +154,13 @@ export const globalStyles = StyleSheet.create({
     lineHeight: 14 * 1.4, // 140% of the font size
   },
 
+  smallTextBold: {
+    fontFamily: "Inter-Bold",
+    fontSize: 14,
+    color: COLORS.black,
+    lineHeight: 14 * 1.4, // 140% of the font size
+  },
+
   btnText: {
     color: COLORS.white,
     fontFamily: "Inter-Medium",

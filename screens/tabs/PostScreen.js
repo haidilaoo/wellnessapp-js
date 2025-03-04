@@ -77,7 +77,7 @@ export default function PostScreen() {
   const [likes, setLikes] = useState({}); // Store likes count separately
 
   const [comments, setComments] = useState([]);
-  const [commentId, setCommmentId] = useState(); // to get which comment is the one changing
+  const [commentId, setCommmentId] = useState(); // to get which comment is the one user is replying to
 
   const [buttonState, setButtonState] = useState(false);
   const handleButtonChange = (comment) => {
@@ -157,17 +157,15 @@ export default function PostScreen() {
 
   const [commentsCount, setCommentsCount] = useState(post.replyCount || 0);
   //Fetch commentCount from postID in realtime
-  useEffect (() => {
+  useEffect(() => {
     if (!post?.id) return;
     const postRef = doc(db, "posts", post.id);
     const unsubscribe = onSnapshot(postRef, (postDoc) => {
       if (postDoc.exists()) {
-        setCommentsCount(
-          postDoc.data().replyCount || 0,
-        );
+        setCommentsCount(postDoc.data().replyCount || 0);
       }
     });
-    return () => unsubscribe(); 
+    return () => unsubscribe();
   }, [[post?.id]]);
 
   //FETCH REAL-TIME LIKE STATE INFORMATION FROM DATABASE FOR HEART UI FILLED OR NOT
@@ -208,18 +206,18 @@ export default function PostScreen() {
       console.log("New comment inserted into database.");
 
       //Update commentsCount on MAIN post //works
-      const postCommentRef = doc(db, 'posts', postId);
+      const postCommentRef = doc(db, "posts", postId);
       await updateDoc(postCommentRef, {
         replyCount: increment(1),
       });
-    
+
       if (parentId) {
-      // Update replyCount on the parent comment
-      const parentCommentRef = doc(db, "comments", parentId);
-      await updateDoc(parentCommentRef, {
-        replyCount: increment(1), // Increment the count
-      });
-    }
+        // Update replyCount on the parent comment
+        const parentCommentRef = doc(db, "comments", parentId);
+        await updateDoc(parentCommentRef, {
+          replyCount: increment(1), // Increment the count
+        });
+      }
 
       // Reset after submission
       setCommment("");
@@ -336,6 +334,7 @@ export default function PostScreen() {
   const [replyTarget, setReplyTarget] = useState({
     type: null, // 'post' or 'comment'
     id: null, // ID of what you're replying to (null for post)
+    author: null, // Author of the parent comment
   });
   // When opening the modal for post reply
   const openReplyToPost = () => {
@@ -343,19 +342,25 @@ export default function PostScreen() {
     showModal();
   };
   // When opening the modal for comment reply
-  const openReplyToComment = (commentId) => {
-    setReplyTarget({ type: "comment", id: commentId });
+  const openReplyToComment = async (commentId) => {
+    const commentRef = doc(db, "comments", commentId);
+    const commentSnap = await getDoc(commentRef);
+    setReplyTarget({
+      type: "comment",
+      id: commentId,
+      author: commentSnap.data().author, // Store parent comment's author
+    });
     showModal();
   };
   return (
     <PaperProvider>
-      <View
-        style={[
-          globalStyles.container,
-          { backgroundColor: "#FFFFFF", paddingTop: 0 },
-        ]}
-      >
-        <ScrollView>
+      <ScrollView>
+        <View
+          style={[
+            globalStyles.container,
+            { backgroundColor: "#FFFFFF", paddingTop: 0 },
+          ]}
+        >
           <View
             key={`${post.categoryName}-${post.id}`}
             style={[globalStyles.gap24, styles.postContainer]}
@@ -430,7 +435,7 @@ export default function PostScreen() {
                   >
                     <Icon name="comment-outline" size={24} color={"#b3b3b3"} />
                     <Text style={[globalStyles.pBold, { color: "#b3b3b3" }]}>
-                    {commentsCount} 
+                      {commentsCount}
                     </Text>
                   </View>
                 </Pressable>
@@ -458,7 +463,9 @@ export default function PostScreen() {
                         }}
                       >
                         <Text style={[globalStyles.p, { marginBottom: 16 }]}>
-                          Reply to @[post's name]
+                          {replyTarget.type === "comment"
+                            ? `Reply to @${replyTarget.author}`
+                            : `Reply to @${post.name}`}
                         </Text>
                         {/* <KeyboardAwareScrollView extraScrollHeight={100}> */}
                         <TextInput
@@ -510,11 +517,31 @@ export default function PostScreen() {
                 width: screenWidth,
               },
             ]}
-          ></View>
+          >
+            <Text
+              style={[
+                globalStyles.smallTextBold,
+                {
+                  marginVertical: 8,
+                  color: COLORS.blackSecondary,
+                  borderTopWidth: 8,
+                  borderColor: COLORS.background,
+                  paddingTop: 16,
+                  paddingLeft: 16,
+                },
+              ]}
+            >
+              Replies
+            </Text>
+          </View>
           {comments.map((comment, index) => (
             <View
               key={index}
-              style={[globalStyles.gap24, styles.postContainer]}
+              style={[
+                globalStyles.gap16,
+                styles.postContainer,
+                { borderTopWidth: 1, borderColor: "#E8E8E8" },
+              ]}
             >
               <View style={{ flexDirection: "row", gap: 12 }}>
                 <Image
@@ -526,7 +553,7 @@ export default function PostScreen() {
                 ></Image>
                 <View style={[{ flexDirection: "column" }]}>
                   <Text style={globalStyles.pBold}>{comment.name}</Text>
-                  <Text style={globalStyles.p}>{comment.topicCategory}</Text>
+                  <Text style={globalStyles.p}>{comment.timestamp}</Text>
                 </View>
               </View>
               <Text style={[globalStyles.p, { color: COLORS.black }]}>
@@ -535,17 +562,19 @@ export default function PostScreen() {
               <View
                 style={{
                   flexDirection: "row",
-                  justifyContent: "space-between",
+                  // justifyContent: "space-between",
+                  justifyContent: "flex-end",
                   alignItems: "center",
                 }}
               >
+                {/* <Text style={globalStyles.p}>Reply</Text> */}
                 <View
                   style={{
                     flexDirection: "row",
                     gap: 16,
-                    backgroundColor: "#F4F6F8",
+                    // backgroundColor: "#F4F6F8",
                     borderRadius: 16,
-                    padding: 16,
+                    // padding: 16,
                     alignSelf: "flex-start",
                   }}
                 >
@@ -603,82 +632,79 @@ export default function PostScreen() {
                         color={"#b3b3b3"}
                       />
                       <Text style={[globalStyles.pBold, { color: "#b3b3b3" }]}>
-                      {comment.replyCount || 0}
+                        {comment.replyCount || 0}
                       </Text>
                     </View>
                   </Pressable>
-                  <Portal>
-                    <KeyboardAvoidingView
-                      behavior={Platform.OS === "ios" ? "height" : "height"}
-                      style={{ flex: 1 }}
-                      keyboardVerticalOffset={100}
-                    >
-                      <Modal
-                        visible={visible}
-                        onDismiss={hideModal}
-                        contentContainerStyle={{
-                          position: "absolute",
-                          bottom: -32,
-                          width: screenWidth,
-                        }}
-                      >
-                        <View
-                          style={{
-                            backgroundColor: COLORS.background,
-                            padding: 20,
-                            borderTopLeftRadius: 20,
-                            borderTopRightRadius: 20,
-                          }}
-                        >
-                          <Text style={[globalStyles.p, { marginBottom: 16 }]}>
-                            Reply to @[post's name]
-                          </Text>
-                          {/* <KeyboardAwareScrollView extraScrollHeight={100}> */}
-                          <TextInput
-                            placeholder="Write your reply"
-                            multiline={true}
-                            autoFocus={true}
-                            numberOfLines={4}
-                            maxLength={250}
-                            value={comment}
-                            style={{
-                              color: COLORS.black,
-                              fontSize: 16,
-                            }}
-                            onChangeText={(comment) => {
-                              setCommment(comment);
-                              handleButtonChange(comment);
-                            }}
-                          ></TextInput>
-                          {/* </KeyboardAwareScrollView> */}
-                          <Button
-                            style={{
-                              paddingVertical: 8,
-                              paddingHorizontal: 20,
-                              borderRadius: 24,
-                              alignSelf: "flex-end",
-                              marginTop: 24,
-                            }}
-                            title="Reply"
-                            state={buttonState}
-                            onPress={() => {
-                              insertCommentToDatabase(
-                                post.id,
-                                post.topicCategory
-                              );
-                            }}
-                          ></Button>
-                        </View>
-                      </Modal>
-                    </KeyboardAvoidingView>
-                  </Portal>
                 </View>
-                <Text style={globalStyles.p}>{comment.timestamp}</Text>
+                {/* <Text style={globalStyles.p}>{comment.timestamp}</Text> */}
               </View>
             </View>
           ))}
-        </ScrollView>
-      </View>
+        </View>
+        {/* <Portal>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "height" : "height"}
+            style={{ flex: 1 }}
+            keyboardVerticalOffset={100}
+          >
+            <Modal
+              visible={visible}
+              onDismiss={hideModal}
+              contentContainerStyle={{
+                position: "absolute",
+                bottom: -32,
+                width: screenWidth,
+              }}
+            >
+              <View
+                style={{
+                  backgroundColor: COLORS.background,
+                  padding: 20,
+                  borderTopLeftRadius: 20,
+                  borderTopRightRadius: 20,
+                }}
+              >
+                <Text style={[globalStyles.p, { marginBottom: 16 }]}>
+                `Reply to @${replyTarget.author}` 
+                </Text>
+               
+                <TextInput
+                  placeholder="Write your reply"
+                  multiline={true}
+                  autoFocus={true}
+                  numberOfLines={4}
+                  maxLength={250}
+                  value={comment}
+                  style={{
+                    color: COLORS.black,
+                    fontSize: 16,
+                  }}
+                  onChangeText={(comment) => {
+                    setCommment(comment);
+                    handleButtonChange(comment);
+                  }}
+                ></TextInput>
+      
+                <Button
+                  style={{
+                    paddingVertical: 8,
+                    paddingHorizontal: 20,
+                    borderRadius: 24,
+                    alignSelf: "flex-end",
+                    marginTop: 24,
+                  }}
+                  title="Reply"
+                  state={buttonState}
+                  onPress={() => {
+                    insertCommentToDatabase(post.id, post.topicCategory);
+                  }}
+                ></Button>
+              </View>
+            </Modal>
+          </KeyboardAvoidingView>
+        </Portal> */}
+      </ScrollView>
     </PaperProvider>
   );
 }
@@ -694,8 +720,10 @@ const styles = StyleSheet.create({
     // borderColor: COLORS.borderDefault,
   },
   divider: {
-    backgroundColor: COLORS.background,
-    height: 8,
+    // backgroundColor: COLORS.background,
+    // height: 8,
+    // borderBottomWidth: 1,
+    // borderColor: COLORS.borderDefault,
     position: "relative",
     left: -16,
   },
