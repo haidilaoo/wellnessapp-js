@@ -8,7 +8,7 @@ import {
   useWindowDimensions,
   KeyboardAvoidingView,
   Platform,
-  ScrollView
+  ScrollView,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { COLORS, globalStyles } from "../../globalStyles";
@@ -135,7 +135,7 @@ export default function PostScreen() {
   const [likedState, setLikedState] = useState({});
   const [likeCounts, setLikeCounts] = useState({});
 
-  //FETCH INITIAL LIKE COUNT INFORMATION FROM DATABASE
+  //FETCH  LIKE INFORMATION FROM DATABASE IN REAL TIME
   useEffect(() => {
     if (!post?.id) return;
 
@@ -155,7 +155,22 @@ export default function PostScreen() {
     return () => unsubscribe(); // Cleanup when component unmounts
   }, [post, userUid]);
 
-  //FETCH INITIAL LIKE STATE INFORMATION FROM DATABASE FOR HEART UI FILLED OR NOT
+  const [commentsCount, setCommentsCount] = useState(post.replyCount || 0);
+  //Fetch commentCount from postID in realtime
+  useEffect (() => {
+    if (!post?.id) return;
+    const postRef = doc(db, "posts", post.id);
+    const unsubscribe = onSnapshot(postRef, (postDoc) => {
+      if (postDoc.exists()) {
+        setCommentsCount(
+          postDoc.data().replyCount || 0,
+        );
+      }
+    });
+    return () => unsubscribe(); 
+  }, [[post?.id]]);
+
+  //FETCH REAL-TIME LIKE STATE INFORMATION FROM DATABASE FOR HEART UI FILLED OR NOT
   useEffect(() => {
     if (!post?.id || !userUid) return;
 
@@ -173,11 +188,11 @@ export default function PostScreen() {
 
   const [likedStateComment, setLikedStateComment] = useState({});
 
-  const insertCommentToDatabase = async (postId, categoryName, ) => {
+  const insertCommentToDatabase = async (postId, categoryName) => {
     const userDocRef = doc(db, "users", userUid);
     const userDocSnap = await getDoc(userDocRef);
- // Determine the parent ID based on reply target
- const parentId = replyTarget.type === 'comment' ? replyTarget.id : null;
+    // Determine the parent ID based on reply target
+    const parentId = replyTarget.type === "comment" ? replyTarget.id : null;
     try {
       const commentRef = collection(db, "comments");
       await addDoc(commentRef, {
@@ -188,11 +203,27 @@ export default function PostScreen() {
         comment: comment,
         timestamp: serverTimestamp(),
         likes: 0,
+        replyCount: 0,
       });
       console.log("New comment inserted into database.");
-       // Reset after submission
-    setCommment('');
-    hideModal();
+
+      //Update commentsCount on MAIN post //works
+      const postCommentRef = doc(db, 'posts', postId);
+      await updateDoc(postCommentRef, {
+        replyCount: increment(1),
+      });
+    
+      if (parentId) {
+      // Update replyCount on the parent comment
+      const parentCommentRef = doc(db, "comments", parentId);
+      await updateDoc(parentCommentRef, {
+        replyCount: increment(1), // Increment the count
+      });
+    }
+
+      // Reset after submission
+      setCommment("");
+      hideModal();
     } catch (error) {
       console.error("Error inserting new comment into database.", error);
     }
@@ -228,6 +259,7 @@ export default function PostScreen() {
         name: doc.data().author,
         comment: doc.data().comment,
         likes: doc.data().likes || 0,
+        replyCount: doc.data().replyCount || 0,
         rawTimestamp: doc.data().timestamp,
         timestamp: doc.data().timestamp
           ? formatRelativeTime(doc.data().timestamp)
@@ -252,8 +284,8 @@ export default function PostScreen() {
       const likeRef = doc(db, "likes", `${commentId}_${userId}`);
       const likeDoc = await getDoc(likeRef);
       const isCurrentlyLiked = likeDoc.exists();
-    
-    //NO NEED THIS ALSO CAN AS THIS DOES NOT UPDATE HEART UI BASED ON USERUID AND ONLY LOCALLY 
+
+      //NO NEED THIS ALSO CAN AS THIS DOES NOT UPDATE HEART UI BASED ON USERUID AND ONLY LOCALLY
       // // Update the state as an object with commentId as key
       // setLikedStateComment((prev) => ({
       //   ...prev,
@@ -283,38 +315,38 @@ export default function PostScreen() {
   //comment like update (TO MAKE SURE HEART UI STATE IS TAKEN FROM FIREBASE AND NOT JUS UPDATED LOCALLY)
   useEffect(() => {
     if (!comments.length || !userUid) return;
-    
+
     // Set up listeners for each comment's like status
-    const unsubscribers = comments.map(comment => {
+    const unsubscribers = comments.map((comment) => {
       const likeRef = doc(db, "likes", `${comment.id}_${userUid}`);
-      
+
       return onSnapshot(likeRef, (docSnap) => {
-        setLikedStateComment(prev => ({
+        setLikedStateComment((prev) => ({
           ...prev,
-          [comment.id]: docSnap.exists()
+          [comment.id]: docSnap.exists(),
         }));
       });
     });
-    
+
     // Cleanup all listeners on unmount
-    return () => unsubscribers.forEach(unsubscribe => unsubscribe());
+    return () => unsubscribers.forEach((unsubscribe) => unsubscribe());
   }, [comments, userUid]);
 
-// Add a state to track what you're replying to
-const [replyTarget, setReplyTarget] = useState({
-  type: null, // 'post' or 'comment'
-  id: null    // ID of what you're replying to (null for post)
-});
-// When opening the modal for post reply
-const openReplyToPost = () => {
-  setReplyTarget({ type: 'post', id: null });
-  showModal();
-};
-// When opening the modal for comment reply
-const openReplyToComment = (commentId) => {
-  setReplyTarget({ type: 'comment', id: commentId });
-  showModal();
-};
+  // Add a state to track what you're replying to
+  const [replyTarget, setReplyTarget] = useState({
+    type: null, // 'post' or 'comment'
+    id: null, // ID of what you're replying to (null for post)
+  });
+  // When opening the modal for post reply
+  const openReplyToPost = () => {
+    setReplyTarget({ type: "post", id: null });
+    showModal();
+  };
+  // When opening the modal for comment reply
+  const openReplyToComment = (commentId) => {
+    setReplyTarget({ type: "comment", id: commentId });
+    showModal();
+  };
   return (
     <PaperProvider>
       <View
@@ -324,159 +356,10 @@ const openReplyToComment = (commentId) => {
         ]}
       >
         <ScrollView>
-        <View
-          key={`${post.categoryName}-${post.id}`}
-          style={[globalStyles.gap24, styles.postContainer]}
-        >
-          <View style={{ flexDirection: "row", gap: 12 }}>
-            <Image
-              source={require("../../assets/Avatar.png")}
-              style={{
-                width: 56,
-                height: 56,
-              }}
-            ></Image>
-            <View style={[{ flexDirection: "column" }]}>
-              <Text style={globalStyles.pBold}>{post.name}</Text>
-              <Text style={globalStyles.p}>{post.topicCategory}</Text>
-            </View>
-          </View>
-          <Text style={[globalStyles.p, { color: COLORS.black }]}>
-            {post.message}
-          </Text>
           <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
+            key={`${post.categoryName}-${post.id}`}
+            style={[globalStyles.gap24, styles.postContainer]}
           >
-            <View
-              style={{
-                flexDirection: "row",
-                gap: 16,
-                backgroundColor: "#F4F6F8",
-                borderRadius: 16,
-                padding: 16,
-                alignSelf: "flex-start",
-              }}
-            >
-              <Pressable onPress={() => toggleLike(post.id, post.categoryName)}>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    gap: 8,
-                    alignItems: "center",
-                  }}
-                >
-                  <Icon
-                    name={likedState[post.id] ? "heart" : "heart-outline"}
-                    color={likedState[post.id] ? "#EC221F" : "#b3b3b3"}
-                    size={24}
-                  />
-                  <Text style={[globalStyles.pBold, { color: "#b3b3b3" }]}>
-                    {likeCounts[post.id] || 0}
-                  </Text>
-                </View>
-              </Pressable>
-
-              <Pressable
-                onPress={() => {
-                  console.log("Pressed.");
-                  // showModal();
-                  openReplyToPost();
-                }}
-              >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    gap: 8,
-                    alignItems: "center",
-                  }}
-                >
-                  <Icon name="comment-outline" size={24} color={"#b3b3b3"} />
-                  <Text style={[globalStyles.pBold, { color: "#b3b3b3" }]}>
-                    20
-                  </Text>
-                </View>
-              </Pressable>
-              <Portal>
-                <KeyboardAvoidingView
-                  behavior={Platform.OS === "ios" ? "height" : "height"}
-                  style={{ flex: 1 }}
-                  keyboardVerticalOffset={100}
-                >
-                  <Modal
-                    visible={visible}
-                    onDismiss={hideModal}
-                    contentContainerStyle={{
-                      position: "absolute",
-                      bottom: -32,
-                      width: screenWidth,
-                    }}
-                  >
-                    <View
-                      style={{
-                        backgroundColor: COLORS.background,
-                        padding: 20,
-                        borderTopLeftRadius: 20,
-                        borderTopRightRadius: 20,
-                      }}
-                    >
-                      <Text style={[globalStyles.p, { marginBottom: 16 }]}>
-                        Reply to @[post's name]
-                      </Text>
-                      {/* <KeyboardAwareScrollView extraScrollHeight={100}> */}
-                      <TextInput
-                        placeholder="Write your reply"
-                        multiline={true}
-                        autoFocus={true}
-                        numberOfLines={4}
-                        maxLength={250}
-                        value={comment}
-                        style={{
-                          color: COLORS.black,
-                          fontSize: 16,
-                        }}
-                        onChangeText={(comment) => {
-                          setCommment(comment);
-                          handleButtonChange(comment);
-                        }}
-                      ></TextInput>
-                      {/* </KeyboardAwareScrollView> */}
-                      <Button
-                        style={{
-                          paddingVertical: 8,
-                          paddingHorizontal: 20,
-                          borderRadius: 24,
-                          alignSelf: "flex-end",
-                          marginTop: 24,
-                        }}
-                        title="Reply"
-                        state={buttonState}
-                        onPress={() => {
-                          insertCommentToDatabase(post.id, post.topicCategory,);
-                          
-                        }}
-                      ></Button>
-                    </View>
-                  </Modal>
-                </KeyboardAvoidingView>
-              </Portal>
-            </View>
-            <Text style={globalStyles.p}>{post.timestamp}</Text>
-          </View>
-        </View>
-        <View
-          style={[
-            styles.divider,
-            {
-              width: screenWidth,
-            },
-          ]}
-        ></View>
-        {comments.map((comment, index) => (
-          <View key={index} style={[globalStyles.gap24, styles.postContainer]}>
             <View style={{ flexDirection: "row", gap: 12 }}>
               <Image
                 source={require("../../assets/Avatar.png")}
@@ -486,12 +369,12 @@ const openReplyToComment = (commentId) => {
                 }}
               ></Image>
               <View style={[{ flexDirection: "column" }]}>
-                <Text style={globalStyles.pBold}>{comment.name}</Text>
-                <Text style={globalStyles.p}>{comment.topicCategory}</Text>
+                <Text style={globalStyles.pBold}>{post.name}</Text>
+                <Text style={globalStyles.p}>{post.topicCategory}</Text>
               </View>
             </View>
             <Text style={[globalStyles.p, { color: COLORS.black }]}>
-              {comment.comment}
+              {post.message}
             </Text>
             <View
               style={{
@@ -511,12 +394,7 @@ const openReplyToComment = (commentId) => {
                 }}
               >
                 <Pressable
-                  onPress={() => {
-                    toggleLikeComment(comment.id, userUid);
-                    setCommmentId(comment.id);
-                    console.log("likedState: ", likedStateComment[comment.id]);
-                    console.log("commentId liked: ", commentId);
-                  }}
+                  onPress={() => toggleLike(post.id, post.categoryName)}
                 >
                   <View
                     style={{
@@ -526,18 +404,12 @@ const openReplyToComment = (commentId) => {
                     }}
                   >
                     <Icon
-                      name={
-                        likedStateComment[comment.id]
-                          ? "heart"
-                          : "heart-outline"
-                      }
-                      color={
-                        likedStateComment[comment.id] ? "#EC221F" : "#b3b3b3"
-                      }
+                      name={likedState[post.id] ? "heart" : "heart-outline"}
+                      color={likedState[post.id] ? "#EC221F" : "#b3b3b3"}
                       size={24}
                     />
                     <Text style={[globalStyles.pBold, { color: "#b3b3b3" }]}>
-                      {comment.likes || 0}
+                      {likeCounts[post.id] || 0}
                     </Text>
                   </View>
                 </Pressable>
@@ -545,7 +417,8 @@ const openReplyToComment = (commentId) => {
                 <Pressable
                   onPress={() => {
                     console.log("Pressed.");
-                    openReplyToComment(comment.id);
+                    // showModal();
+                    openReplyToPost();
                   }}
                 >
                   <View
@@ -557,7 +430,7 @@ const openReplyToComment = (commentId) => {
                   >
                     <Icon name="comment-outline" size={24} color={"#b3b3b3"} />
                     <Text style={[globalStyles.pBold, { color: "#b3b3b3" }]}>
-                      20
+                    {commentsCount} 
                     </Text>
                   </View>
                 </Pressable>
@@ -618,7 +491,7 @@ const openReplyToComment = (commentId) => {
                           onPress={() => {
                             insertCommentToDatabase(
                               post.id,
-                              post.topicCategory,
+                              post.topicCategory
                             );
                           }}
                         ></Button>
@@ -627,10 +500,183 @@ const openReplyToComment = (commentId) => {
                   </KeyboardAvoidingView>
                 </Portal>
               </View>
-              <Text style={globalStyles.p}>{comment.timestamp}</Text>
+              <Text style={globalStyles.p}>{post.timestamp}</Text>
             </View>
           </View>
-        ))}
+          <View
+            style={[
+              styles.divider,
+              {
+                width: screenWidth,
+              },
+            ]}
+          ></View>
+          {comments.map((comment, index) => (
+            <View
+              key={index}
+              style={[globalStyles.gap24, styles.postContainer]}
+            >
+              <View style={{ flexDirection: "row", gap: 12 }}>
+                <Image
+                  source={require("../../assets/Avatar.png")}
+                  style={{
+                    width: 56,
+                    height: 56,
+                  }}
+                ></Image>
+                <View style={[{ flexDirection: "column" }]}>
+                  <Text style={globalStyles.pBold}>{comment.name}</Text>
+                  <Text style={globalStyles.p}>{comment.topicCategory}</Text>
+                </View>
+              </View>
+              <Text style={[globalStyles.p, { color: COLORS.black }]}>
+                {comment.comment}
+              </Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    gap: 16,
+                    backgroundColor: "#F4F6F8",
+                    borderRadius: 16,
+                    padding: 16,
+                    alignSelf: "flex-start",
+                  }}
+                >
+                  <Pressable
+                    onPress={() => {
+                      toggleLikeComment(comment.id, userUid);
+                      setCommmentId(comment.id);
+                      console.log(
+                        "likedState: ",
+                        likedStateComment[comment.id]
+                      );
+                      console.log("commentId liked: ", commentId);
+                    }}
+                  >
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        gap: 8,
+                        alignItems: "center",
+                      }}
+                    >
+                      <Icon
+                        name={
+                          likedStateComment[comment.id]
+                            ? "heart"
+                            : "heart-outline"
+                        }
+                        color={
+                          likedStateComment[comment.id] ? "#EC221F" : "#b3b3b3"
+                        }
+                        size={24}
+                      />
+                      <Text style={[globalStyles.pBold, { color: "#b3b3b3" }]}>
+                        {comment.likes || 0}
+                      </Text>
+                    </View>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={() => {
+                      console.log("Pressed.");
+                      openReplyToComment(comment.id);
+                    }}
+                  >
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        gap: 8,
+                        alignItems: "center",
+                      }}
+                    >
+                      <Icon
+                        name="comment-outline"
+                        size={24}
+                        color={"#b3b3b3"}
+                      />
+                      <Text style={[globalStyles.pBold, { color: "#b3b3b3" }]}>
+                      {comment.replyCount || 0}
+                      </Text>
+                    </View>
+                  </Pressable>
+                  <Portal>
+                    <KeyboardAvoidingView
+                      behavior={Platform.OS === "ios" ? "height" : "height"}
+                      style={{ flex: 1 }}
+                      keyboardVerticalOffset={100}
+                    >
+                      <Modal
+                        visible={visible}
+                        onDismiss={hideModal}
+                        contentContainerStyle={{
+                          position: "absolute",
+                          bottom: -32,
+                          width: screenWidth,
+                        }}
+                      >
+                        <View
+                          style={{
+                            backgroundColor: COLORS.background,
+                            padding: 20,
+                            borderTopLeftRadius: 20,
+                            borderTopRightRadius: 20,
+                          }}
+                        >
+                          <Text style={[globalStyles.p, { marginBottom: 16 }]}>
+                            Reply to @[post's name]
+                          </Text>
+                          {/* <KeyboardAwareScrollView extraScrollHeight={100}> */}
+                          <TextInput
+                            placeholder="Write your reply"
+                            multiline={true}
+                            autoFocus={true}
+                            numberOfLines={4}
+                            maxLength={250}
+                            value={comment}
+                            style={{
+                              color: COLORS.black,
+                              fontSize: 16,
+                            }}
+                            onChangeText={(comment) => {
+                              setCommment(comment);
+                              handleButtonChange(comment);
+                            }}
+                          ></TextInput>
+                          {/* </KeyboardAwareScrollView> */}
+                          <Button
+                            style={{
+                              paddingVertical: 8,
+                              paddingHorizontal: 20,
+                              borderRadius: 24,
+                              alignSelf: "flex-end",
+                              marginTop: 24,
+                            }}
+                            title="Reply"
+                            state={buttonState}
+                            onPress={() => {
+                              insertCommentToDatabase(
+                                post.id,
+                                post.topicCategory
+                              );
+                            }}
+                          ></Button>
+                        </View>
+                      </Modal>
+                    </KeyboardAvoidingView>
+                  </Portal>
+                </View>
+                <Text style={globalStyles.p}>{comment.timestamp}</Text>
+              </View>
+            </View>
+          ))}
         </ScrollView>
       </View>
     </PaperProvider>

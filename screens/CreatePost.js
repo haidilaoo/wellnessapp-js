@@ -95,6 +95,7 @@ export default function CreatePost() {
         timestamp: serverTimestamp(),
         topicCategory: topic, // Now stored as a field instead of being a subcollection
         likes: 0,
+        replyCount: 0,
       });
   
       console.log("New post inserted into database with ID:", postRef.id);
@@ -316,7 +317,7 @@ export default function CreatePost() {
               multiline={true}
               autoFocus={true}
               numberOfLines={4}
-              maxLength={250}
+              maxLength={400}
               value={message}
               onChangeText={(message) => {
                 setMessage(message);

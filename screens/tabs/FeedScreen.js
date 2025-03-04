@@ -69,7 +69,6 @@ export default function CommunityScreen() {
   const navigation = useNavigation();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [categories, setCategories] = useState([]);
   const [heart, setHeart] = useState({}); // Object to track liked posts
   const [likes, setLikes] = useState({}); // Store likes count separately
   // Get current user UID
@@ -148,130 +147,7 @@ export default function CommunityScreen() {
       console.error("Error toggling like:", error);
     }
   };
-  //OLD STRUCTURE
-  // useEffect(() => {
-  //   const fetchUserLikes = async () => {
-  //     if (posts.length === 0) return;
-
-  //     try {
-  //       const likedPosts = {};
-  //       const likeCounts = {}; // Store likes count separately
   
-  //       // Check each post to see if the current user has liked it
-  //       for (const post of posts) {
-  //         const likeRef = doc(
-  //           db,
-  //           "posts",
-  //           post.categoryName,
-  //           "posts",
-  //           post.id,
-  //           "likes",
-  //           userUid
-  //         );
-  //         const likeDoc = await getDoc(likeRef);
-  //         likedPosts[post.id] = likeDoc.exists();
-  //       }
-
-  //       setHeart(likedPosts);
-  //       setLikes(likeCounts); // Set likes count in a separate state
-  //     } catch (error) {
-  //       console.error("Error fetching likes:", error);
-  //     }
-  //   };
-
-  //   fetchUserLikes();
-  // }, [posts]); // Run when posts change
-
-  // OLD STRUCTURE
-  // useEffect(() => {
-  //   setLoading(true);
-  //   setPosts([]);
-
-  //   // Known category names
-  //   const categoryNames = [
-  //     "💭 Deep Talks & Feels",
-  //     "🌎 Main Lobby",
-  //     "😩 Vent & Rant",
-  //     "🚩 Toxic or Nah?",
-  //     "🤔 Need Advice?",
-  //   ];
-
-  //   setCategories(categoryNames);
-  //   const listeners = [];
-
-  //   // Set up listeners for each category
-  //   categoryNames.forEach((categoryName) => {
-  //     console.log(`Setting up listener for category: ${categoryName}`);
-
-  //     const postsRef = collection(db, "posts", categoryName, "posts");
-  //     const q = query(postsRef);
-
-  //     const unsubscribe = onSnapshot(
-  //       q,
-  //       (snapshot) => {
-  //         const categoryPosts = snapshot.docs.map((doc) => ({
-  //           id: doc.id,
-  //           message: doc.data().message,
-  //           name: doc.data().name,
-  //           topicCategory: doc.data().topicCategory || categoryName,
-  //           categoryName: categoryName, // Store the category name explicitly
-  //           likes: doc.data().likes || 0,
-  //           rawTimestamp: doc.data().timestamp,
-  //           timestamp: doc.data().timestamp
-  //             ? formatRelativeTime(doc.data().timestamp)
-  //             : "Unknown time",
-  //           createdAt: doc.data().timestamp
-  //             ? new Date(doc.data().timestamp.seconds * 1000)
-  //             : new Date(0),
-  //         }));
-
-  //         console.log(
-  //           `Received ${categoryPosts.length} posts from ${categoryName}`
-  //         );
-
-  //         // Update posts state - merge with existing posts
-  //         setPosts((currentPosts) => {
-  //           // Remove any existing posts from this category
-  //           const filteredPosts = currentPosts.filter(
-  //             (post) => post.categoryName !== categoryName
-  //           );
-
-  //           // Add new posts from this category
-  //           const newPosts = [...filteredPosts, ...categoryPosts];
-
-  //           // Sort all posts by timestamp (newest first)
-  //           return newPosts.sort((a, b) => b.createdAt - a.createdAt);
-  //         });
-
-  //         setLoading(false);
-  //       },
-  //       (error) => {
-  //         console.error(`Error in ${categoryName} listener:`, error);
-  //       }
-  //     );
-
-  //     listeners.push(unsubscribe);
-  //   });
-
-  //   // Set up interval to update relative timestamps
-  //   const timerId = setInterval(() => {
-  //     setPosts((currentPosts) =>
-  //       currentPosts.map((post) => ({
-  //         ...post,
-  //         timestamp: post.rawTimestamp
-  //           ? formatRelativeTime(post.rawTimestamp)
-  //           : "Unknown time",
-  //       }))
-  //     );
-  //   }, 60000); // Update every minute
-
-  //   // Clean up listeners when component unmounts
-  //   return () => {
-  //     console.log("Cleaning up listeners");
-  //     listeners.forEach((unsubscribe) => unsubscribe());
-  //     clearInterval(timerId);
-  //   };
-  // }, []); // Empty dependency array to run only once
   useEffect(() => {
     const fetchUserLikes = async () => {
       if (posts.length === 0) return;
@@ -307,7 +183,7 @@ export default function CommunityScreen() {
   }, [posts]); // Run when posts change
   
   
-  
+ //FETCH POSTS 
   useEffect(() => {
     setLoading(true);
     setPosts([]);
@@ -325,6 +201,7 @@ export default function CommunityScreen() {
           name: doc.data().name,
           topicCategory: doc.data().topicCategory, // Now stored as a field
           likes: doc.data().likes || 0,
+          replyCount: doc.data().replyCount || 0,
           rawTimestamp: doc.data().timestamp,
           timestamp: doc.data().timestamp
             ? formatRelativeTime(doc.data().timestamp)
@@ -445,7 +322,7 @@ export default function CommunityScreen() {
                           <Text
                             style={[globalStyles.pBold, { color: "#b3b3b3" }]}
                           >
-                            20
+                            {post.replyCount || 0}
                           </Text>
                         </View>
                         </Pressable>
