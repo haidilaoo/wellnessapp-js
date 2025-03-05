@@ -1,8 +1,11 @@
 import { StyleSheet, Text } from "react-native";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Svg, { Rect, Text as SvgText } from "react-native-svg";
 import { treemap, hierarchy } from "d3-hierarchy";
 import { scaleOrdinal } from "d3-scale";
+import { collection, getDocs, limit, orderBy, query } from "firebase/firestore";
+import { db } from "../firebaseConfig";
+import { getAuth } from "firebase/auth";
 // Manually define colors
 const colors = [
   "#7c4dff",
@@ -16,21 +19,74 @@ const colors = [
   "#bcbd22",
   "#17becf",
 ];
-// Sample data
-const data = {
+
+const sampleData = {
   name: "root",
-  children: [
-    { name: "People", value: 14 },
+  children: 
+[    { name: "People", value: 14 },
     { name: "Workplace", value: 4 },
     { name: "No Reason", value: 4 },
     // { name: "Sleep", value: 1 },
     { name: "Studying", value: 1 },
     { name: "Overtime", value: 1 },
     { name: "Payday", value: 1 },
-  ],
+  ]
+  ,
 };
 
 const TreemapChart = ({ width = 300, height = 200 }) => {
+  const userUid = getAuth().currentUser.uid;
+  const [topReasons, setTopReasons] = useState([]);
+//Data
+const treeData = topReasons.map((reason) => {
+ //account for if less than 6 reasons recorded
+  if (reason.id === "N/A") {
+    return {
+      name: "",
+      value: 0,
+    };
+  }
+
+  return {  // Return the object properly
+    name: reason.id,
+    value: reason.count,
+  };
+});
+
+
+const data = {
+  name: "root",
+  children: treeData,
+}
+
+useEffect(() => {
+  const fetchTopReasons = async () => {
+    try {
+      const reasonRef = collection(db, "users", userUid, "reason_tally");
+      const q = query(reasonRef, orderBy("count", "desc"), limit(6));
+      const querySnapshot = await getDocs(q);
+
+      let reasons = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        // ...doc.data(), //fetch all data
+        count: doc.data().count,
+      }));
+
+      while (reasons.length < 5) {
+        reasons.push({ id: "N/A", count: 0 });
+      }
+
+      setTopReasons(reasons);
+      console.log("Top 6 reasons: ", reasons);
+    } catch (error) {
+      console.error("Error fetching top reasons:", error);
+    }
+  };
+
+  if (userUid) {
+    fetchTopReasons();
+  }
+}, [db, userUid]); // Runs when db or userUid changes
   // Convert data into a hierarchical structure
   const root = hierarchy(data)
     .sum((d) => d.value)
@@ -63,7 +119,7 @@ const TreemapChart = ({ width = 300, height = 200 }) => {
           <SvgText
             x={(leaf.x0 + leaf.x1) / 2} // Horizontal center
             y={(leaf.y0 + leaf.y1) / 2} // Vertical center
-            fontSize="10"
+            fontSize="12"
             fill="white"
             // dy="8" // Add vertical padding
             // dx="8"// Add horizontal padding

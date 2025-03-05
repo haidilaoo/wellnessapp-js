@@ -512,6 +512,23 @@ export default function Profile({navigation} ) {
               </View>
             </View>
           </View>
+          <Pressable
+          style={{
+            width: 44,
+            height: 44,
+            backgroundColor: COLORS.white,
+           
+            position: "absolute",
+            right: 16,
+            top: 56,
+            justifyContent: "center",
+            alignItems: "center",
+            borderRadius: 16,
+          }}
+          onPress={() => logout(navigation)}
+        >
+          <Icon name="log-out" size={20} color={COLORS.black}></Icon>
+        </Pressable>
         </ScrollView>
         <Portal>
           <KeyboardAvoidingView
@@ -545,6 +562,7 @@ export default function Profile({navigation} ) {
                       padding: 16,
                       marginTop: 16,
                       borderRadius: 8,
+                     
                       color: COLORS.black,
                     },
                   ]}
@@ -587,22 +605,7 @@ export default function Profile({navigation} ) {
             </Modal>
           </KeyboardAvoidingView>
         </Portal>
-        <Pressable
-          style={{
-            width: 44,
-            height: 44,
-            backgroundColor: COLORS.white,
-            position: "absolute",
-            right: 16,
-            top: 56,
-            justifyContent: "center",
-            alignItems: "center",
-            borderRadius: 16,
-          }}
-          onPress={() => logout(navigation)}
-        >
-          <Icon name="log-out" size={20} color={COLORS.black}></Icon>
-        </Pressable>
+       
       </View>
     </PaperProvider>
   );
@@ -614,8 +617,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     paddingVertical: 24,
     paddingHorizontal: 16,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    borderRadius: 16,
   },
 
   questContainer: {
