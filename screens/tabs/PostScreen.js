@@ -427,15 +427,17 @@ export default function PostScreen() {
     return topLevelComments;
   };
 
+  
+
   // In your render method, modify the comments mapping
   const organizedComments = organizeComments(comments);
-  const renderReplies = (comment, parentComment) => {
+  const renderReplies = (comment, parentComment, indentation) => {
     return (
       comment.replies &&
       comment.replies.length > 0 && (
-        <View style={{ marginLeft: 24 }}>
+        <View style={{ marginLeft: indentation,  }}>
           {comment.replies.map((reply, replyIndex) => (
-            <View key={reply.id || replyIndex} style={[styles.replyContainer]}>
+            <View key={reply.id || replyIndex} style={[styles.replySubContainer]}>
               <View
                 style={{
                   flexDirection: "row",
@@ -443,11 +445,19 @@ export default function PostScreen() {
                   alignItems: "center",
                 }}
               >
-                <Icon name="arrow-right" size={16} color={"#b3b3b3"} />
+                <Icon name="arrow-right-bottom" size={16} color={"#b3b3b3"} />
+                <Image
+                source={require("../../assets/Avatar.png")}
+                style={{
+                  width: 24,
+                  height: 24,
+                }}
+              ></Image>
                 <Text style={[globalStyles.pBold, { color: COLORS.black }]}>
                   {reply.name}{" "}
+                  <Icon name="arrow-right" size={16} color={"#b3b3b3"} />
                   <Text style={{ color: COLORS.blackSecondary }}>
-                    replied to {parentComment.name}
+                  {" "}{comment.name}
                   </Text>
                 </Text>
               </View>
@@ -528,7 +538,121 @@ export default function PostScreen() {
                 </View>
               </View>
               {/* Recursively render nested replies */}
-              {renderReplies(reply, comment)}
+              {renderReplies(reply, comment, 0)}
+            </View>
+          ))}
+        </View>
+      )
+    );
+  };
+  const renderMainReplies = (comment, parentComment, indentation) => {
+    return (
+      comment.replies &&
+      comment.replies.length > 0 && (
+        <View style={{ marginLeft: indentation,  }}>
+          {comment.replies.map((reply, replyIndex) => (
+            <View key={reply.id || replyIndex} style={[styles.replyContainer]}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  gap: 8,
+                  alignItems: "center",
+                }}
+              >
+                {/* <Icon name="arrow-right-bottom" size={16} color={"#b3b3b3"} /> */}
+                <Image
+                source={require("../../assets/Avatar.png")}
+                style={{
+                  width: 24,
+                  height: 24,
+                }}
+              ></Image>
+                <Text style={[globalStyles.pBold, { color: COLORS.black }]}>
+                  {reply.name}{" "}
+                  {/* <Icon name="arrow-right" size={16} color={"#b3b3b3"} />
+                  <Text style={{ color: COLORS.blackSecondary }}>
+                  {" "}{comment.name}
+                  </Text> */}
+                </Text>
+              </View>
+              <Text style={[globalStyles.p, { color: COLORS.black }]}>
+                {reply.comment}
+              </Text>
+
+              {/* Like and Reply Actions for Nested Replies */}
+              <View
+                style={{
+                  marginTop: 8,
+                  justifyContent: "space-between",
+                  alignContent: "center",
+                  flexDirection: 'row',
+                }}>
+              
+                <Text style={globalStyles.p}>{reply.timestamp}</Text>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    gap: 16,
+                    alignSelf: "flex-end",
+
+                    // marginTop: 8
+                  }}
+                >
+                  <Pressable
+                    onPress={() => {
+                      toggleLikeComment(reply.id, userUid);
+                    }}
+                  >
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        gap: 8,
+                        alignItems: "center",
+                      }}
+                    >
+                      <Icon
+                        name={
+                          likedStateComment[reply.id]
+                            ? "heart"
+                            : "heart-outline"
+                        }
+                        color={
+                          likedStateComment[reply.id] ? "#EC221F" : "#b3b3b3"
+                        }
+                        size={24}
+                      />
+                      <Text style={[globalStyles.pBold, { color: "#b3b3b3" }]}>
+                        {reply.likes || 0}
+                      </Text>
+                    </View>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={() => {
+                      openReplyToComment(reply.id);
+                    }}
+                  >
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        gap: 8,
+                        alignItems: "center",
+                      }}
+                    >
+                      <Icon
+                        name="comment-outline"
+                        size={24}
+                        color={"#b3b3b3"}
+                      />
+                      <Text style={[globalStyles.pBold, { color: "#b3b3b3" }]}>
+                        {reply.replyCount || 0}
+                      </Text>
+                    </View>
+                  </Pressable>
+                </View>
+              </View>
+              {/* Recursively render nested replies */}
+              {renderReplies(reply, comment, 0)}
             </View>
           ))}
         </View>
@@ -820,7 +944,7 @@ export default function PostScreen() {
                   </Pressable>
                 </View>
               </View>
-              {renderReplies(comment, comment)}
+              {renderMainReplies(comment, comment, 0)}
             </View>
           ))}
         </View>
@@ -849,6 +973,14 @@ const styles = StyleSheet.create({
   },
 
   replyContainer: {
+    marginTop: 8,
+    paddingVertical: 4,
+    borderLeftWidth: 2,
+    borderColor: "#E8E8E8",
+    paddingLeft: 8,
+  },
+
+  replySubContainer: {
     marginTop: 8,
     paddingVertical: 4,
     borderLeftWidth: 2,
