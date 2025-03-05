@@ -168,6 +168,30 @@ export default function PostScreen() {
     return () => unsubscribe();
   }, [[post?.id]]);
 
+  const [username, setUsername] = useState("");
+
+  //Fetching any non Top-level comments user's nickname
+  const fetchAuthorOfReplies = async (commentId) => {
+    try {
+      if (!commentId) return; // Ensure userUid is valid before querying
+
+      const userRef = doc(db, "users", userUid);
+      const userDoc = await getDoc(userRef);
+
+      if (userDoc.exists()) {
+        setUsername(userDoc.data().nickname); // ✅ Update state safely
+      } else {
+        console.log("No such document!");
+      }
+    } catch (error) {
+      console.error("Error fetching user:", error);
+    }
+  };
+
+  // useEffect(async () => {
+  //   fetchUsername();
+  // }, [userUid]);
+
   //FETCH REAL-TIME LIKE STATE INFORMATION FROM DATABASE FOR HEART UI FILLED OR NOT
   useEffect(() => {
     if (!post?.id || !userUid) return;
@@ -227,19 +251,19 @@ export default function PostScreen() {
     }
   };
 
-  const fetchComments = async (postId) => {
-    const q = query(
-      collection(db, "comments"),
-      where("postId", "==", post.id),
-      orderBy("timestamp", "asc")
-    );
-    const snapshot = await getDocs(q);
-    const comments = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-    return comments;
-  };
+  // const fetchComments = async (postId) => {
+  //   const q = query(
+  //     collection(db, "comments"),
+  //     where("postId", "==", post.id),
+  //     orderBy("timestamp", "asc")
+  //   );
+  //   const snapshot = await getDocs(q);
+  //   const comments = snapshot.docs.map((doc) => ({
+  //     id: doc.id,
+  //     ...doc.data(),
+  //   }));
+  //   return comments;
+  // };
   //FETCH COMMENTS FOR THIS POST
   useEffect(() => {
     // if (!post?.id || !post?.topicCategory) return; // Ensure post exists
@@ -256,6 +280,7 @@ export default function PostScreen() {
         id: doc.id,
         name: doc.data().author,
         comment: doc.data().comment,
+        parentId: doc.data().parentId,
         likes: doc.data().likes || 0,
         replyCount: doc.data().replyCount || 0,
         rawTimestamp: doc.data().timestamp,
@@ -352,6 +377,164 @@ export default function PostScreen() {
     });
     showModal();
   };
+
+  //for displaying nested replies
+  // Add a function to filter and organize comments hierarchically
+  const organizeComments = (comments) => {
+    const commentMap = new Map();
+    const topLevelComments = [];
+
+    // First pass: Create a map of all comments with replies
+    comments.forEach((comment) => {
+      commentMap.set(comment.id, {
+        ...comment,
+        replies: [],
+      });
+    });
+
+    // Second pass: Organize replies (now with nested replies support)
+    comments.forEach((comment) => {
+      if (comment.parentId) {
+        const parentComment = commentMap.get(comment.parentId);
+        if (parentComment) {
+          // Add this comment to its parent's replies
+          parentComment.replies.push(commentMap.get(comment.id));
+        }
+      } else {
+        // Only add as top-level comment if it has no parentId
+        topLevelComments.push(commentMap.get(comment.id));
+      }
+    });
+
+    // Third pass: Ensure deeply nested replies are captured
+    const processReplies = (comment) => {
+      if (comment.replies && comment.replies.length > 0) {
+        comment.replies.forEach((reply) => {
+          // Recursively process nested replies
+          processReplies(reply);
+        });
+      }
+    };
+
+    topLevelComments.forEach(processReplies);
+
+    // Debug logging
+    console.log(
+      "Top Level Comments with All Replies:",
+      JSON.stringify(topLevelComments, null, 2)
+    );
+
+    return topLevelComments;
+  };
+
+  // In your render method, modify the comments mapping
+  const organizedComments = organizeComments(comments);
+  const renderReplies = (comment, parentComment) => {
+    return (
+      comment.replies &&
+      comment.replies.length > 0 && (
+        <View style={{ marginLeft: 24 }}>
+          {comment.replies.map((reply, replyIndex) => (
+            <View key={reply.id || replyIndex} style={[styles.replyContainer]}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  gap: 8,
+                  alignItems: "center",
+                }}
+              >
+                <Icon name="arrow-right" size={16} color={"#b3b3b3"} />
+                <Text style={[globalStyles.pBold, { color: COLORS.black }]}>
+                  {reply.name}{" "}
+                  <Text style={{ color: COLORS.blackSecondary }}>
+                    replied to {parentComment.name}
+                  </Text>
+                </Text>
+              </View>
+              <Text style={[globalStyles.p, { color: COLORS.black }]}>
+                {reply.comment}
+              </Text>
+
+              {/* Like and Reply Actions for Nested Replies */}
+              <View
+                style={{
+                  marginTop: 8,
+                  justifyContent: "space-between",
+                  alignContent: "center",
+                  flexDirection: 'row',
+                }}>
+              
+                <Text style={globalStyles.p}>{reply.timestamp}</Text>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    gap: 16,
+                    alignSelf: "flex-end",
+
+                    // marginTop: 8
+                  }}
+                >
+                  <Pressable
+                    onPress={() => {
+                      toggleLikeComment(reply.id, userUid);
+                    }}
+                  >
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        gap: 8,
+                        alignItems: "center",
+                      }}
+                    >
+                      <Icon
+                        name={
+                          likedStateComment[reply.id]
+                            ? "heart"
+                            : "heart-outline"
+                        }
+                        color={
+                          likedStateComment[reply.id] ? "#EC221F" : "#b3b3b3"
+                        }
+                        size={24}
+                      />
+                      <Text style={[globalStyles.pBold, { color: "#b3b3b3" }]}>
+                        {reply.likes || 0}
+                      </Text>
+                    </View>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={() => {
+                      openReplyToComment(reply.id);
+                    }}
+                  >
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        gap: 8,
+                        alignItems: "center",
+                      }}
+                    >
+                      <Icon
+                        name="comment-outline"
+                        size={24}
+                        color={"#b3b3b3"}
+                      />
+                      <Text style={[globalStyles.pBold, { color: "#b3b3b3" }]}>
+                        {reply.replyCount || 0}
+                      </Text>
+                    </View>
+                  </Pressable>
+                </View>
+              </View>
+              {/* Recursively render nested replies */}
+              {renderReplies(reply, comment)}
+            </View>
+          ))}
+        </View>
+      )
+    );
+  };
   return (
     <PaperProvider>
       <ScrollView>
@@ -443,7 +626,7 @@ export default function PostScreen() {
                   <KeyboardAvoidingView
                     behavior={Platform.OS === "ios" ? "height" : "height"}
                     style={{ flex: 1 }}
-                    keyboardVerticalOffset={100}
+                    keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 180}
                   >
                     <Modal
                       visible={visible}
@@ -534,7 +717,7 @@ export default function PostScreen() {
               Replies
             </Text>
           </View>
-          {comments.map((comment, index) => (
+          {organizedComments.map((comment, index) => (
             <View
               key={index}
               style={[
@@ -567,7 +750,6 @@ export default function PostScreen() {
                   alignItems: "center",
                 }}
               >
-                {/* <Text style={globalStyles.p}>Reply</Text> */}
                 <View
                   style={{
                     flexDirection: "row",
@@ -637,73 +819,11 @@ export default function PostScreen() {
                     </View>
                   </Pressable>
                 </View>
-                {/* <Text style={globalStyles.p}>{comment.timestamp}</Text> */}
               </View>
+              {renderReplies(comment, comment)}
             </View>
           ))}
         </View>
-        {/* <Portal>
-          <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "height" : "height"}
-            style={{ flex: 1 }}
-            keyboardVerticalOffset={100}
-          >
-            <Modal
-              visible={visible}
-              onDismiss={hideModal}
-              contentContainerStyle={{
-                position: "absolute",
-                bottom: -32,
-                width: screenWidth,
-              }}
-            >
-              <View
-                style={{
-                  backgroundColor: COLORS.background,
-                  padding: 20,
-                  borderTopLeftRadius: 20,
-                  borderTopRightRadius: 20,
-                }}
-              >
-                <Text style={[globalStyles.p, { marginBottom: 16 }]}>
-                `Reply to @${replyTarget.author}` 
-                </Text>
-               
-                <TextInput
-                  placeholder="Write your reply"
-                  multiline={true}
-                  autoFocus={true}
-                  numberOfLines={4}
-                  maxLength={250}
-                  value={comment}
-                  style={{
-                    color: COLORS.black,
-                    fontSize: 16,
-                  }}
-                  onChangeText={(comment) => {
-                    setCommment(comment);
-                    handleButtonChange(comment);
-                  }}
-                ></TextInput>
-      
-                <Button
-                  style={{
-                    paddingVertical: 8,
-                    paddingHorizontal: 20,
-                    borderRadius: 24,
-                    alignSelf: "flex-end",
-                    marginTop: 24,
-                  }}
-                  title="Reply"
-                  state={buttonState}
-                  onPress={() => {
-                    insertCommentToDatabase(post.id, post.topicCategory);
-                  }}
-                ></Button>
-              </View>
-            </Modal>
-          </KeyboardAvoidingView>
-        </Portal> */}
       </ScrollView>
     </PaperProvider>
   );
@@ -726,5 +846,13 @@ const styles = StyleSheet.create({
     // borderColor: COLORS.borderDefault,
     position: "relative",
     left: -16,
+  },
+
+  replyContainer: {
+    marginTop: 8,
+    paddingVertical: 4,
+    borderLeftWidth: 2,
+    borderColor: "#E8E8E8",
+    paddingLeft: 8,
   },
 });
