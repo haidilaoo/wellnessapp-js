@@ -145,26 +145,27 @@ const MainAppFlow = () => {
         component={HomeScreen}
         options={{ headerShown: false }}
       />
-      <Tab.Screen
+      {/* <Tab.Screen
         name="Therapist"
         component={TherapistScreen}
         options={{ headerShown: false }}
-      />
+      /> */}
       {/* <Tab.Screen
         name="Community"
         component={CommunityFlow}
         options={{ headerShown: false }}
-      /> */}
+      /> */}     
+       <Tab.Screen
+        name="Community"
+        component={TabScreen}
+        options={{ headerShown: false }}
+      />
       <Tab.Screen
         name="Profile"
         component={Profile}
         options={{ headerShown: false }}
       />
-      <Tab.Screen
-        name="Tab"
-        component={TabScreen}
-        options={{ headerShown: false }}
-      />
+
     </Tab.Navigator>
   );
 };
@@ -224,20 +225,6 @@ const RootNavigator = () => {
           },
         }}
       >
-        {/* Authentication Flow */}
-        {/* {userUid ? ( */}
-        {/* <Stack.Screen
-            name="MainAppFlow"
-            component={MainAppFlow}
-            options={{ headerShown: false }}
-          /> */}
-        {/* ) : ( */}
-        {/* <Stack.Screen
-          name="AuthFlow"
-          component={AuthFlow}
-          options={{ headerShown: false }}
-        /> */}
-        {/* )} */}
         {userUid ? (
           isOnboardingCompleted ? (
             <Stack.Screen
@@ -259,12 +246,7 @@ const RootNavigator = () => {
             options={{ headerShown: false }}
           />
         )}
-        {/* Onboarding Flow */}
-        {/* <Stack.Screen
-          name="OnboardingFlow"
-          component={OnboardingFlow}
-          options={{ headerShown: false }}
-        /> */}
+
         {/* Main App: Recording emotion */}
         <Stack.Screen
           name="HomeScreenFlow"
@@ -272,11 +254,6 @@ const RootNavigator = () => {
           options={{ headerShown: false }}
         />
 
-        {/* <Stack.Screen
-        //   name="MainAppFlow"
-        //   component={MainAppFlow}
-        //   options={{ headerShown: false }}
-        // /> */}
       </Stack.Navigator>
     </NavigationContainer>
   );

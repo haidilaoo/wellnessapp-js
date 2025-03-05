@@ -35,8 +35,9 @@ import Button from "../../components/Button";
 import { color } from "react-native-elements/dist/helpers";
 import { updateNicknameInPosts } from "../../updateNicknameInPosts";
 import { updateNicknameInComments } from "../../updateNicknameInComments";
+import { logout } from "../../logout";
 
-export default function Profile() {
+export default function Profile({navigation} ) {
   const { width } = useWindowDimensions();
   const [nickname, setNickname] = useState(null);
   const [memo, setMemo] = useState(null);
@@ -174,7 +175,7 @@ export default function Profile() {
           }
         });
         // const nickname = userDoc.data().nickname;
-       
+
         setNickname(nickname);
         //FETCH MEMO
         const memo = userDoc.data().memo;
@@ -283,7 +284,6 @@ export default function Profile() {
       console.log("Nickname updated successfully!");
       await updateNicknameInPosts(newNickname, userUid);
       await updateNicknameInComments(newNickname, userUid);
-
     } catch (error) {
       console.error("Error updating nickname:", error);
     }
@@ -321,6 +321,7 @@ export default function Profile() {
                 left: width / 2 - 60,
               }}
             ></Image>
+
             <View>
               <View
                 style={[
@@ -532,9 +533,10 @@ export default function Profile() {
                   paddingVertical: 36,
                   borderRadius: 16,
                   width: 340,
+                  
                 }}
               >
-                <Text style={globalStyles.h3}>Change nickname</Text>
+                <Text style={[globalStyles.h3, {textAlign: 'center',}]}>Change nickname</Text>
                 <TextInput
                   style={[
                     globalStyles.p,
@@ -575,6 +577,7 @@ export default function Profile() {
                       onPress={() => {
                         setNewNickname(newNickname);
                         insertNewNickname(newNickname);
+                        setButtonState(!buttonState);
                         hideModal();
                       }}
                     />
@@ -584,6 +587,22 @@ export default function Profile() {
             </Modal>
           </KeyboardAvoidingView>
         </Portal>
+        <Pressable
+          style={{
+            width: 44,
+            height: 44,
+            backgroundColor: COLORS.white,
+            position: "absolute",
+            right: 16,
+            top: 56,
+            justifyContent: "center",
+            alignItems: "center",
+            borderRadius: 16,
+          }}
+          onPress={() => logout(navigation)}
+        >
+          <Icon name="log-out" size={20} color={COLORS.black}></Icon>
+        </Pressable>
       </View>
     </PaperProvider>
   );
