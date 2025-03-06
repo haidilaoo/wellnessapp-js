@@ -424,10 +424,7 @@ export default function Profile({navigation} ) {
                       borderRadius: 16,
                     }}
                   >
-                    {/* <Text style={[globalStyles.pBold, { marginBottom: 16 }]}>
-                    Keywords recorded with{" "}
-                    <Text style={{ color: COLORS.green }}>______</Text>
-                  </Text> */}
+               
                     {selectedCircle != null ? (
                       // reasons.map((reason,index)=> (<Chip>{reason}</Chip>))
                       <>
@@ -478,15 +475,6 @@ export default function Profile({navigation} ) {
                         </Chip>
                       </>
                     )}
-                    {/* <Chip
-                    style={{
-                      backgroundColor: COLORS.white,
-                      alignSelf: "flex-start",
-                    }}
-                    textStyle={{ color: COLORS.blackSecondary }}
-                  >
-                    Tap on an emotion!
-                  </Chip> */}
                   </View>
                 </View>
               </View>

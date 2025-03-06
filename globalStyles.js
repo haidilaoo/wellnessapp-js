@@ -138,6 +138,13 @@ export const globalStyles = StyleSheet.create({
     // textAlign: "center",
     lineHeight: 16 * 1.4, // 140% of the font size
   },
+  pMedium: {
+    fontFamily: "Inter-Medium",
+    fontSize: 16,
+    color: COLORS.black,
+    // textAlign: "center",
+    lineHeight: 16 * 1.4, // 140% of the font size
+  },
 
   pBold: {
     fontFamily: "Inter-Bold",

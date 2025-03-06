@@ -261,7 +261,7 @@ export default function CommunityScreen() {
                       ></Image>
                       <View style={[{ flexDirection: "column" }]}>
                         <Text style={globalStyles.pBold}>{post.name}</Text>
-                        <Text style={globalStyles.p}>{post.topicCategory}</Text>
+                        <Text style={[globalStyles.p,  {marginTop: 2, fontSize: 14}]}>{post.topicCategory}</Text>
                       </View>
                     </View>
                     <Text style={[globalStyles.p, { color: COLORS.black }]}>
@@ -269,7 +269,7 @@ export default function CommunityScreen() {
                     </Text>
                     <View
                       style={{
-                        flexDirection: "row",
+                        flexDirection: "row-reverse",
                         justifyContent: "space-between",
                         alignItems: "center",
                       }}
@@ -327,7 +327,7 @@ export default function CommunityScreen() {
                         </View>
                         </Pressable>
                       </View>
-                      <Text style={globalStyles.p}>{post.timestamp}</Text>
+                      <Text style={[globalStyles.p, {color: '#b3b3b3'}]}>{post.timestamp}</Text>
                     </View>
                   </View>
                 ))
