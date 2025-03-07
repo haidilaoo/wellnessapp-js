@@ -36,6 +36,8 @@ import { updateNicknameInComments } from "../../updateNicknameInComments";
 import { logout } from "../../logout";
 import UploadModal from "../../components/UploadModal";
 import * as ImagePicker from "expo-image-picker";
+import { updateProfileImageInPosts } from "../../updateProfileImageInPosts";
+import { updateProfileImageInComments } from "../../updateProfileImageInComments";
 
 export default function Profile({ navigation }) {
   const [profileImage, setProfileImage] = useState(null);
@@ -50,6 +52,8 @@ export default function Profile({ navigation }) {
       // You would typically save the image URI to Firestore here
       const userRef = doc(db, "users", userUid);
       await updateDoc(userRef, { profileImageUri: imageUri });
+      await updateProfileImageInPosts(imageUri, userUid);
+      await updateProfileImageInComments(imageUri, userUid);
       console.log("Profile image updated successfully!");
     } catch (error) {
       console.error("Error saving image:", error);

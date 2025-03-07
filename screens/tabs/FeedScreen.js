@@ -203,6 +203,7 @@ export default function CommunityScreen() {
           likes: doc.data().likes || 0,
           replyCount: doc.data().replyCount || 0,
           rawTimestamp: doc.data().timestamp,
+          profileImageUri: doc.data().profileImageUri,
           timestamp: doc.data().timestamp
             ? formatRelativeTime(doc.data().timestamp)
             : "Unknown time",
@@ -253,10 +254,11 @@ export default function CommunityScreen() {
                   >
                     <View style={{ flexDirection: "row", gap: 12 }}>
                       <Image
-                        source={require("../../assets/Avatar.png")}
+                        source={post.profileImageUri ? { uri: post.profileImageUri } : require("../../assets/Avatar.png")}
                         style={{
                           width: 56,
                           height: 56,
+                          borderRadius: 56 / 2 ,
                         }}
                       ></Image>
                       <View style={[{ flexDirection: "column" }]}>

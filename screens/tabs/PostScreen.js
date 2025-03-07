@@ -34,6 +34,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../../firebaseConfig";
 import { color } from "react-native-elements/dist/helpers";
+import UserHeader from "../../components/UserHeader";
 
 // Helper function to format timestamps in a Reddit-like style
 const formatRelativeTime = (timestamp) => {
@@ -93,20 +94,20 @@ const ActionButton = ({
 );
 
 // Component for user avatar and name
-const UserHeader = ({ name, subtitle, size = 56 }) => (
-  <View style={styles.userHeaderContainer}>
-    <Image
-      source={require("../../assets/Avatar.png")}
-      style={{ width: size, height: size }}
-    />
-    <View style={{ flexDirection: "column" }}>
-      <Text style={[globalStyles.pBold]}>{name}</Text>
-      <Text style={[globalStyles.p, { marginTop: 2, fontSize: 14 }]}>
-        {subtitle}
-      </Text>
-    </View>
-  </View>
-);
+// const UserHeader = ({ name, subtitle, size = 56 , profileImage}) => (
+//   <View style={styles.userHeaderContainer}>
+//     <Image
+//       source={profileImage ? { uri: profileImage } : require("../../assets/Avatar.png")}
+//       style={{ width: size, height: size }}
+//     />
+//     <View style={{ flexDirection: "column" }}>
+//       <Text style={[globalStyles.pBold]}>{name}</Text>
+//       <Text style={[globalStyles.p, { marginTop: 2, fontSize: 14 }]}>
+//         {subtitle}
+//       </Text>
+//     </View>
+//   </View>
+// );
 
 // Component for comment replies
 // const CommentReply = ({ reply, parentAuthor, onLike, onReply, likedState, indentation = 0, isNested = false }) => (
@@ -172,17 +173,17 @@ const CommentReply = ({
           style={{ width: 24, height: 24 }}
         />
         <Text style={[globalStyles.pBold, { color: COLORS.black }]}>
-          {reply.name}</Text>
-          {!isNested && (
-            <>
-              <Icon name="arrow-right" size={16} color="#b3b3b3" />
-              <Text style={{ color: COLORS.blackSecondary }}>
-                {" "}
-                {parentAuthor}
-              </Text>
-            </>
-          )}
-        
+          {reply.name}
+        </Text>
+        {!isNested && (
+          <>
+            <Icon name="arrow-right" size={16} color="#b3b3b3" />
+            <Text style={{ color: COLORS.blackSecondary }}>
+              {" "}
+              {parentAuthor}
+            </Text>
+          </>
+        )}
       </View>
 
       <Text style={[globalStyles.p, { color: COLORS.black }]}>
@@ -486,6 +487,7 @@ export default function PostScreen() {
         parentId: doc.data().parentId,
         likes: doc.data().likes || 0,
         replyCount: doc.data().replyCount || 0,
+        profileImageUri: doc.data().profileImageUri,
         rawTimestamp: doc.data().timestamp,
         timestamp: doc.data().timestamp
           ? formatRelativeTime(doc.data().timestamp)
@@ -545,7 +547,6 @@ export default function PostScreen() {
   // };
   const RepliesContainer = ({ comment, children }) => {
     const [collapsed, setCollapsed] = useState(true);
-
     return (
       <View style={{ marginLeft: 16 }}>
         {collapsed ? (
@@ -561,7 +562,6 @@ export default function PostScreen() {
           </Pressable>
         ) : (
           <>
-            {" "}
             <Pressable onPress={() => setCollapsed(true)}>
               <Text
                 style={[
@@ -590,6 +590,7 @@ export default function PostScreen() {
             key={reply.id || index}
             reply={reply}
             parentAuthor={comment.name}
+            profileImage = {comment.profileImageUri}
             onLike={toggleLikeComment}
             onReply={openReplyToComment}
             likedState={likedStateComment}
@@ -613,7 +614,12 @@ export default function PostScreen() {
         >
           {/* Post content */}
           <View style={[globalStyles.gap24, styles.postContainer]}>
-            <UserHeader name={post.name} subtitle={post.topicCategory} />
+            <UserHeader
+              name={post.name}
+              subtitle={post.topicCategory}
+              postId={post.id}
+              collection= {'posts'}
+            />
 
             <Text style={[globalStyles.p, { color: COLORS.black }]}>
               {post.message}
@@ -661,7 +667,7 @@ export default function PostScreen() {
                 { borderTopWidth: 1, borderColor: "#E8E8E8" },
               ]}
             >
-              <UserHeader name={comment.name} subtitle={comment.timestamp} />
+              <UserHeader name={comment.name} subtitle={comment.timestamp} postId={comment.id} collection={'comments'}/>
 
               <Text style={[globalStyles.p, { color: COLORS.black }]}>
                 {comment.comment}
