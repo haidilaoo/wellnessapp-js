@@ -3,7 +3,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { useFonts } from "expo-font";
-
+import { LogBox } from "react-native";
 // Context
 import { UserProvider } from "./screens/onboarding/UserContext.js";
 
@@ -38,6 +38,11 @@ const Stack = createStackNavigator();
 // Create a Stack Navigator specifically for the Community tab
 const CommunityStack = createStackNavigator();
 
+//suppress some warnings that does not affect functionality of app
+LogBox.ignoreLogs([
+  "Text strings must be rendered within a <Text> component",
+  "Slider: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.",
+]);
 
 // Authentication Flow
 const AuthFlow = () => {
@@ -154,8 +159,8 @@ const MainAppFlow = () => {
         name="Community"
         component={CommunityFlow}
         options={{ headerShown: false }}
-      /> */}     
-       <Tab.Screen
+      /> */}
+      <Tab.Screen
         name="Community"
         component={TabScreen}
         options={{ headerShown: false }}
@@ -165,7 +170,6 @@ const MainAppFlow = () => {
         component={Profile}
         options={{ headerShown: false }}
       />
-
     </Tab.Navigator>
   );
 };
@@ -253,7 +257,6 @@ const RootNavigator = () => {
           component={HomeScreenFlow}
           options={{ headerShown: false }}
         />
-
       </Stack.Navigator>
     </NavigationContainer>
   );

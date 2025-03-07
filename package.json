@@ -26,6 +26,7 @@
     "date-fns": "^4.1.0",
     "expo": "~52.0.26",
     "expo-font": "~13.0.3",
+    "expo-image-picker": "^16.0.6",
     "expo-modules-core": "~2.1.4",
     "expo-splash-screen": "^0.29.21",
     "expo-status-bar": "~2.0.1",

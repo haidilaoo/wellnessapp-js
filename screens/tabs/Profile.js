@@ -6,9 +6,10 @@ import {
   useWindowDimensions,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
 } from "react-native";
 import React, { useEffect, useState } from "react";
-import { Pressable, ScrollView, TextInput } from "react-native-gesture-handler";
+import { ScrollView, TextInput } from "react-native-gesture-handler";
 import { COLORS, globalStyles } from "../../globalStyles";
 import { getAuth } from "firebase/auth";
 import { db } from "../../firebaseConfig";
@@ -21,24 +22,98 @@ import {
   orderBy,
   limit,
   getDocs,
-  setDoc,
   updateDoc,
 } from "firebase/firestore";
 import CircleWithText from "../../components/CircleWithText";
 import CircleArrangement from "../../components/CircleArrangement";
 import TreemapChart from "../../components/TreemapChart";
 import { Chip, Modal, PaperProvider } from "react-native-paper";
-import { getDataConnect } from "firebase/data-connect";
 import Icon from "react-native-vector-icons/Feather";
 import Portal from "react-native-paper/src/components/Portal/Portal";
 import Button from "../../components/Button";
-import { color } from "react-native-elements/dist/helpers";
 import { updateNicknameInPosts } from "../../updateNicknameInPosts";
 import { updateNicknameInComments } from "../../updateNicknameInComments";
 import { logout } from "../../logout";
+import UploadModal from "../../components/UploadModal";
+import * as ImagePicker from "expo-image-picker";
 
-export default function Profile({navigation} ) {
+export default function Profile({ navigation }) {
+  const [profileImage, setProfileImage] = useState(null);
   const { width } = useWindowDimensions();
+  
+  // Save the profile image to state and Firestore
+  const saveImage = async (imageUri) => {
+    try {
+      setProfileImage(imageUri);
+      setVisibleUpload(false);
+      
+      // You would typically save the image URI to Firestore here
+      const userRef = doc(db, "users", userUid);
+      await updateDoc(userRef, { profileImageUri: imageUri });
+      console.log("Profile image updated successfully!");
+    } catch (error) {
+      console.error("Error saving image:", error);
+    }
+  };
+  
+  // Camera functionality
+  const takePhoto = async () => {
+    try {
+      const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
+      
+      if (cameraPermission.status !== 'granted') {
+        alert("Camera permission is required to take photos");
+        return;
+      }
+      
+      let result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 1,
+      });
+
+      if (!result.canceled) {
+        await saveImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error("Error taking photo:", error);
+    }
+  };
+  
+  // Gallery functionality
+  const pickImage = async () => {
+    try {
+      const galleryPermission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (galleryPermission.status !== 'granted') {
+        alert("Gallery permission is required to select photos");
+        return;
+      }
+      
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 1,
+      });
+
+      if (!result.canceled) {
+        await saveImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error("Error picking image:", error);
+    }
+  };
+
+  const removeImage = async (params) => {
+    try {
+      saveImage(null);
+    } catch (error) {
+      alert(error);
+      setVisibleUpload(false);
+    }
+  }
+  
   const [nickname, setNickname] = useState(null);
   const [memo, setMemo] = useState(null);
   const [meditate, setMeditate] = useState(null);
@@ -51,10 +126,11 @@ export default function Profile({navigation} ) {
   const [topEmotions, setTopEmotions] = useState([]);
 
   const handleSelect = (circle) => {
-    setSelectedCircle(circle); // Update selected circle
+    setSelectedCircle(circle);
   };
-  // Initialize circles as an empty array in state
+  
   const [circles, setCircles] = useState([]);
+  
   // 1st useEffect: Fetch top 5 emotions
   useEffect(() => {
     const fetchTopEmotions = async () => {
@@ -65,7 +141,6 @@ export default function Profile({navigation} ) {
 
         let emotions = querySnapshot.docs.map((doc) => ({
           id: doc.id,
-          // ...doc.data(), //fetch all data
           count: doc.data().count,
         }));
 
@@ -74,7 +149,6 @@ export default function Profile({navigation} ) {
         }
 
         setTopEmotions(emotions);
-        // console.log("Top 5 emotions: ", emotions);
       } catch (error) {
         console.error("Error fetching top emotions:", error);
       }
@@ -83,7 +157,7 @@ export default function Profile({navigation} ) {
     if (userUid) {
       fetchTopEmotions();
     }
-  }, [db, userUid]); // Runs when db or userUid changes
+  }, [db, userUid]);
 
   // Add this useEffect to map topEmotions to circles whenever topEmotions changes
   useEffect(() => {
@@ -133,7 +207,7 @@ export default function Profile({navigation} ) {
           const reasonsRef = doc(
             db,
             "users",
-            userUid, // Replace with the actual user UID
+            userUid,
             "emotion_tally",
             selectedCircle.text
           );
@@ -142,7 +216,7 @@ export default function Profile({navigation} ) {
 
           if (reasonDoc.exists()) {
             const reasonsData = reasonDoc.data().reasons;
-            setReasons(reasonsData); // Update state with reasons
+            setReasons(reasonsData);
             console.log("Reasons: ", reasonsData);
           } else {
             console.log("No reasons found for the selected circle.");
@@ -154,7 +228,7 @@ export default function Profile({navigation} ) {
 
       fetchReasons();
     }
-  }, [selectedCircle]); // Runs the effect when selectedCircle changes
+  }, [selectedCircle]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -162,6 +236,12 @@ export default function Profile({navigation} ) {
 
       try {
         const userDoc = await getDoc(doc(db, "users", userUid));
+        
+        // Fetch profile image if available
+        if (userDoc.exists() && userDoc.data().profileImageUri) {
+          setProfileImage(userDoc.data().profileImageUri);
+        }
+        
         //FETCH NICKNAME
         const userRef = doc(db, "users", userUid);
         // Listen for real-time updates
@@ -169,14 +249,12 @@ export default function Profile({navigation} ) {
           if (docSnapshot.exists()) {
             const nickname = docSnapshot.data().nickname;
             console.log("Nickname: ", nickname);
-            setNickname(nickname); // Update the state with the new nickname
+            setNickname(nickname);
           } else {
             console.log("No such document!");
           }
         });
-        // const nickname = userDoc.data().nickname;
 
-        setNickname(nickname);
         //FETCH MEMO
         const memo = userDoc.data().memo;
         console.log("Memo: ", memo);
@@ -247,11 +325,13 @@ export default function Profile({navigation} ) {
         });
 
         // Cleanup the listener when the component unmounts
-        return () => unsubscribeMeditate();
-        unsubscribeMove();
-        unsubscribeMusic();
-        unsubscribeSleep();
-        unsubscribeNickname();
+        return () => {
+          unsubscribeMeditate();
+          unsubscribeMove();
+          unsubscribeMusic();
+          unsubscribeSleep();
+          unsubscribeNickname();
+        };
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -259,14 +339,6 @@ export default function Profile({navigation} ) {
     fetchData();
   }, []);
 
-  //hardcoded data for initial testing
-  // const circles = [
-  //   { text: "happy", size: 160, value: 5 },
-  //   { text: "calm", size: 140, value: 4 },
-  //   { text: "anxious", size: 120, value: 3 },
-  //   { text: "tired", size: 100, value: 2 },
-  //   { text: "excited", size: 80, value: 1 },
-  // ];
   const [visible, setVisible] = React.useState(false);
   const [buttonState, setButtonState] = useState(false);
   const [newNickname, setNewNickname] = useState();
@@ -274,13 +346,12 @@ export default function Profile({navigation} ) {
   const insertNewNickname = async (newNickname) => {
     try {
       if (!newNickname || !newNickname.trim()) {
-        // Ensure it's a valid string
         console.error("Nickname cannot be empty!");
         return;
       }
 
-      const userRef = doc(db, "users", userUid); // Get the document reference
-      await updateDoc(userRef, { nickname: newNickname }); // Set the new nickname
+      const userRef = doc(db, "users", userUid);
+      await updateDoc(userRef, { nickname: newNickname });
       console.log("Nickname updated successfully!");
       await updateNicknameInPosts(newNickname, userUid);
       await updateNicknameInComments(newNickname, userUid);
@@ -291,6 +362,10 @@ export default function Profile({navigation} ) {
 
   const showModal = () => setVisible(true);
   const hideModal = () => setVisible(false);
+
+  const [visibleUpload, setVisibleUpload] = React.useState(false);
+  const showUploadModal = () => setVisibleUpload(true);
+  const hideUploadModal = () => setVisibleUpload(false);
 
   return (
     <PaperProvider>
@@ -311,16 +386,19 @@ export default function Profile({navigation} ) {
               style={[globalStyles.topbanner, { marginTop: -115 }]}
               resizeMode="contain"
             />
-            <Image
-              source={require("../../assets/Avatar.png")}
-              style={{
-                width: 120,
-                height: 120,
-                position: "absolute",
-                top: 84,
-                left: width / 2 - 60,
-              }}
-            ></Image>
+            <Pressable
+              style={{ position: "absolute", top: 84, left: width / 2 - 60 }}
+              onPress={showUploadModal}
+            >
+              <Image
+                source={profileImage ? { uri: profileImage } : require("../../assets/Avatar.png")}
+                style={{
+                  width: 120,
+                  height: 120,
+                  borderRadius: 60,
+                }}
+              />
+            </Pressable>
 
             <View>
               <View
@@ -404,7 +482,7 @@ export default function Profile({navigation} ) {
                       flex: 1,
                       justifyContent: "center",
                       alignItems: "center",
-                      width: "100%", // Make sure parent has full width
+                      width: "100%",
                     }}
                   >
                     {circles.length > 0 ? (
@@ -424,9 +502,7 @@ export default function Profile({navigation} ) {
                       borderRadius: 16,
                     }}
                   >
-               
                     {selectedCircle != null ? (
-                      // reasons.map((reason,index)=> (<Chip>{reason}</Chip>))
                       <>
                         <Text
                           style={[globalStyles.pBold, { marginBottom: 16 }]}
@@ -445,6 +521,7 @@ export default function Profile({navigation} ) {
                         >
                           {reasons.map((reason, index) => (
                             <Chip
+                              key={index}
                               style={{
                                 backgroundColor: COLORS.white,
                                 alignSelf: "flex-start",
@@ -490,8 +567,7 @@ export default function Profile({navigation} ) {
                     style={{
                       flex: 1,
                       justifyContent: "center",
-                      // alignItems: "center",
-                      width: "100%", // Make sure parent has full width
+                      width: "100%",
                     }}
                   >
                     <TreemapChart width={330} height={250} />
@@ -501,22 +577,21 @@ export default function Profile({navigation} ) {
             </View>
           </View>
           <Pressable
-          style={{
-            width: 44,
-            height: 44,
-            backgroundColor: COLORS.white,
-           
-            position: "absolute",
-            right: 16,
-            top: 56,
-            justifyContent: "center",
-            alignItems: "center",
-            borderRadius: 16,
-          }}
-          onPress={() => logout(navigation)}
-        >
-          <Icon name="log-out" size={20} color={COLORS.black}></Icon>
-        </Pressable>
+            style={{
+              width: 44,
+              height: 44,
+              backgroundColor: COLORS.white,
+              position: "absolute",
+              right: 16,
+              top: 56,
+              justifyContent: "center",
+              alignItems: "center",
+              borderRadius: 16,
+            }}
+            onPress={() => logout(navigation)}
+          >
+            <Icon name="log-out" size={20} color={COLORS.black}></Icon>
+          </Pressable>
         </ScrollView>
         <Portal>
           <KeyboardAvoidingView
@@ -538,10 +613,11 @@ export default function Profile({navigation} ) {
                   paddingVertical: 36,
                   borderRadius: 16,
                   width: 340,
-                  
                 }}
               >
-                <Text style={[globalStyles.h3, {textAlign: 'center',}]}>Change nickname</Text>
+                <Text style={[globalStyles.h3, { textAlign: "center" }]}>
+                  Change nickname
+                </Text>
                 <TextInput
                   style={[
                     globalStyles.p,
@@ -550,7 +626,6 @@ export default function Profile({navigation} ) {
                       padding: 16,
                       marginTop: 16,
                       borderRadius: 8,
-                     
                       color: COLORS.black,
                     },
                   ]}
@@ -581,7 +656,6 @@ export default function Profile({navigation} ) {
                       title="Save"
                       state={buttonState}
                       onPress={() => {
-                        setNewNickname(newNickname);
                         insertNewNickname(newNickname);
                         setButtonState(!buttonState);
                         hideModal();
@@ -593,7 +667,13 @@ export default function Profile({navigation} ) {
             </Modal>
           </KeyboardAvoidingView>
         </Portal>
-       
+        <UploadModal
+          visible={visibleUpload}
+          hideModal={hideUploadModal}
+          onCameraPress={takePhoto}
+          onGalleryPress={pickImage}
+          onRemovePress={removeImage}
+        />
       </View>
     </PaperProvider>
   );
@@ -610,7 +690,7 @@ const styles = StyleSheet.create({
 
   questContainer: {
     alignItems: "center",
-    flex: 1, // Each child takes up equal width
+    flex: 1,
     borderWidth: 1,
     borderColor: COLORS.borderDefault,
     borderRadius: 16,

@@ -172,7 +172,7 @@ const CommentReply = ({
           style={{ width: 24, height: 24 }}
         />
         <Text style={[globalStyles.pBold, { color: COLORS.black }]}>
-          {reply.name}
+          {reply.name}</Text>
           {!isNested && (
             <>
               <Icon name="arrow-right" size={16} color="#b3b3b3" />
@@ -182,7 +182,7 @@ const CommentReply = ({
               </Text>
             </>
           )}
-        </Text>
+        
       </View>
 
       <Text style={[globalStyles.p, { color: COLORS.black }]}>
@@ -572,7 +572,7 @@ export default function PostScreen() {
                 Hide replies
               </Text>
             </Pressable>
-            {children}
+            <View>{children}</View>
           </>
         )}
       </View>
