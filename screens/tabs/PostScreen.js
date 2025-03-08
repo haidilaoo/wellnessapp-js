@@ -10,7 +10,7 @@ import {
   Platform,
   ScrollView,
 } from "react-native";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { COLORS, globalStyles } from "../../globalStyles";
 import { useRoute } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
@@ -93,74 +93,29 @@ const ActionButton = ({
   </Pressable>
 );
 
-// Component for user avatar and name
-// const UserHeader = ({ name, subtitle, size = 56 , profileImage}) => (
-//   <View style={styles.userHeaderContainer}>
-//     <Image
-//       source={profileImage ? { uri: profileImage } : require("../../assets/Avatar.png")}
-//       style={{ width: size, height: size }}
-//     />
-//     <View style={{ flexDirection: "column" }}>
-//       <Text style={[globalStyles.pBold]}>{name}</Text>
-//       <Text style={[globalStyles.p, { marginTop: 2, fontSize: 14 }]}>
-//         {subtitle}
-//       </Text>
-//     </View>
-//   </View>
-// );
-
 // Component for comment replies
-// const CommentReply = ({ reply, parentAuthor, onLike, onReply, likedState, indentation = 0, isNested = false }) => (
-//   <View style={[isNested ? styles.replySubContainer : styles.replyContainer]}>
-//     <View style={styles.replyHeaderContainer}>
-//       {isNested && <Icon name="arrow-right-bottom" size={16} color="#b3b3b3" />}
-//       <Image
-//         source={require("../../assets/Avatar.png")}
-//         style={{ width: 24, height: 24 }}
-//       />
-//       <Text style={[globalStyles.pBold, { color: COLORS.black }]}>
-//         {reply.name}
-//         {isNested && (
-//           <>
-//             <Icon name="arrow-right" size={16} color="#b3b3b3" />
-//             <Text style={{ color: COLORS.blackSecondary }}> {parentAuthor}</Text>
-//           </>
-//         )}
-//       </Text>
-//     </View>
-
-//     <Text style={[globalStyles.p, { color: COLORS.black }]}>
-//       {reply.comment}
-//     </Text>
-
-//     <View style={styles.replyActionsContainer}>
-//       <Text style={globalStyles.p}>{reply.timestamp}</Text>
-//       <View style={styles.actionsRow}>
-//         <ActionButton
-//           icon="heart-outline"
-//           count={reply.likes}
-//           onPress={() => onLike(reply.id)}
-//           isActive={likedState[reply.id]}
-//         />
-//         <ActionButton
-//           icon="comment-outline"
-//           count={reply.replyCount}
-//           onPress={() => onReply(reply.id)}
-//           isActive={false}
-//         />
-//       </View>
-//     </View>
-//   </View>
-// );
 const CommentReply = ({
   reply,
   parentAuthor,
   onLike,
   onReply,
   likedState,
+  profileImage,
   isNested = false,
+  expandedReplies,
+  setExpandedReplies,
 }) => {
-  const [collapsed, setCollapsed] = useState(true);
+  // Get the expanded state for this comment's replies
+  const isExpanded = expandedReplies.includes(reply.id);
+
+  // Toggle expanded state for this comment
+  const toggleExpanded = () => {
+    if (isExpanded) {
+      setExpandedReplies(expandedReplies.filter(id => id !== reply.id));
+    } else {
+      setExpandedReplies([...expandedReplies, reply.id]);
+    }
+  };
 
   return (
     <View style={[isNested ? styles.replySubContainer : styles.replyContainer]}>
@@ -169,8 +124,8 @@ const CommentReply = ({
           <Icon name="arrow-right-bottom" size={16} color="#b3b3b3" />
         )}
         <Image
-          source={require("../../assets/Avatar.png")}
-          style={{ width: 24, height: 24 }}
+          source={profileImage ? { uri: profileImage } : require("../../assets/Avatar.png")}
+          style={{ width: 24, height: 24, borderRadius: 24/2 }}
         />
         <Text style={[globalStyles.pBold, { color: COLORS.black }]}>
           {reply.name}
@@ -212,14 +167,14 @@ const CommentReply = ({
 
       {/* View More Replies Button */}
       {reply.replies && reply.replies.length > 0 && (
-        <Pressable onPress={() => setCollapsed(!collapsed)}>
+        <Pressable onPress={toggleExpanded}>
           <Text
             style={[
               globalStyles.smallText,
               { color: COLORS.blackSecondary, marginTop: 8 },
             ]}
           >
-            {collapsed
+            {!isExpanded
               ? `View more replies (${reply.replies.length})`
               : "Hide replies"}
           </Text>
@@ -227,16 +182,19 @@ const CommentReply = ({
       )}
 
       {/* Render Replies */}
-      {!collapsed &&
+      {isExpanded &&
         reply.replies.map((nestedReply) => (
           <CommentReply
             key={nestedReply.id}
             reply={nestedReply}
             parentAuthor={reply.name}
+            profileImage={nestedReply.profileImageUri}
             onLike={onLike}
             onReply={onReply}
             likedState={likedState}
             isNested={true}
+            expandedReplies={expandedReplies}
+            setExpandedReplies={setExpandedReplies}
           />
         ))}
     </View>
@@ -248,7 +206,7 @@ export default function PostScreen() {
   const { post } = route.params;
   const userUid = getAuth().currentUser.uid;
   const screenWidth = useWindowDimensions().width;
-
+  
   // State variables
   const [comment, setComment] = useState("");
   const [comments, setComments] = useState([]);
@@ -263,6 +221,13 @@ export default function PostScreen() {
     id: null,
     author: null,
   });
+  
+  // State to track expanded replies - store IDs of expanded comments
+  const [expandedReplies, setExpandedReplies] = useState([]);
+  
+  // Ref to maintain scroll position
+  const scrollViewRef = useRef(null);
+  const [scrollPosition, setScrollPosition] = useState(0);
 
   // Modal functions
   const showModal = () => setVisible(true);
@@ -335,6 +300,11 @@ export default function PostScreen() {
   // Insert comment to database
   const insertCommentToDatabase = async () => {
     try {
+      // Save scroll position before adding comment
+      if (scrollViewRef.current) {
+        scrollViewRef.current.scrollTo({ y: scrollPosition, animated: false });
+      }
+      
       const userDocRef = doc(db, "users", userUid);
       const userDocSnap = await getDoc(userDocRef);
 
@@ -348,6 +318,7 @@ export default function PostScreen() {
         authorId: userUid,
         author: userDocSnap.data().nickname,
         comment: comment,
+        profileImageUri: userDocSnap.data().profileImageUri,
         timestamp: serverTimestamp(),
         likes: 0,
         replyCount: 0,
@@ -365,6 +336,11 @@ export default function PostScreen() {
         await updateDoc(parentCommentRef, {
           replyCount: increment(1),
         });
+        
+        // If replying to a comment that isn't yet expanded, expand it
+        if (!expandedReplies.includes(parentId)) {
+          setExpandedReplies(prev => [...prev, parentId]);
+        }
       }
 
       // Reset after submission
@@ -415,6 +391,18 @@ export default function PostScreen() {
         }
       } else {
         topLevelComments.push(commentMap.get(comment.id));
+      }
+    });
+
+    // Sort top-level comments by timestamp, newest first
+    topLevelComments.sort((a, b) => {
+      return b.createdAt.getTime() - a.createdAt.getTime();
+    });
+
+    // Sort replies within each comment, newest first
+    topLevelComments.forEach(comment => {
+      if (comment.replies && comment.replies.length > 0) {
+        comment.replies.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
       }
     });
 
@@ -522,35 +510,23 @@ export default function PostScreen() {
   }, [comments, userUid]);
 
   // Render functions
-
-  // Render nested replies
-  // const renderReplies = (comment, parentComment, indentation) => {
-  //   if (!comment.replies || comment.replies.length === 0) return null;
-
-  //   return (
-  //     <View style={{ marginLeft: indentation }}>
-  //       {comment.replies.map((reply, replyIndex) => (
-  //         <React.Fragment key={reply.id || replyIndex}>
-  //           <CommentReply
-  //             reply={reply}
-  //             parentAuthor={comment.name}
-  //             onLike={toggleLikeComment}
-  //             onReply={openReplyToComment}
-  //             likedState={likedStateComment}
-  //             isNested={true}
-  //           />
-  //           {renderReplies(reply, comment, 0)}
-  //         </React.Fragment>
-  //       ))}
-  //     </View>
-  //   );
-  // };
   const RepliesContainer = ({ comment, children }) => {
-    const [collapsed, setCollapsed] = useState(true);
+    // Get the expanded state for this comment
+    const isExpanded = expandedReplies.includes(comment.id);
+    
+    // Toggle expanded state for this comment
+    const toggleExpanded = () => {
+      if (isExpanded) {
+        setExpandedReplies(expandedReplies.filter(id => id !== comment.id));
+      } else {
+        setExpandedReplies([...expandedReplies, comment.id]);
+      }
+    };
+    
     return (
       <View style={{ marginLeft: 16 }}>
-        {collapsed ? (
-          <Pressable onPress={() => setCollapsed(false)}>
+        {!isExpanded ? (
+          <Pressable onPress={toggleExpanded}>
             <Text
               style={[
                 globalStyles.smallText,
@@ -562,7 +538,7 @@ export default function PostScreen() {
           </Pressable>
         ) : (
           <>
-            <Pressable onPress={() => setCollapsed(true)}>
+            <Pressable onPress={toggleExpanded}>
               <Text
                 style={[
                   globalStyles.smallText,
@@ -580,7 +556,7 @@ export default function PostScreen() {
   };
 
   // Render main replies
-  const renderMainReplies = (comment, parentComment, indentation) => {
+  const renderMainReplies = (comment) => {
     if (!comment.replies || comment.replies.length === 0) return null;
 
     return (
@@ -590,11 +566,13 @@ export default function PostScreen() {
             key={reply.id || index}
             reply={reply}
             parentAuthor={comment.name}
-            profileImage = {comment.profileImageUri}
+            profileImage={reply.profileImageUri}
             onLike={toggleLikeComment}
             onReply={openReplyToComment}
             likedState={likedStateComment}
             isNested={true}
+            expandedReplies={expandedReplies}
+            setExpandedReplies={setExpandedReplies}
           />
         ))}
       </RepliesContainer>
@@ -603,9 +581,19 @@ export default function PostScreen() {
 
   const organizedComments = organizeComments(comments);
 
+  // Track scroll position
+  const handleScroll = (event) => {
+    const { y } = event.nativeEvent.contentOffset;
+    setScrollPosition(y);
+  };
+
   return (
     <PaperProvider>
-      <ScrollView>
+      <ScrollView 
+        ref={scrollViewRef}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+      >
         <View
           style={[
             globalStyles.container,
@@ -618,7 +606,7 @@ export default function PostScreen() {
               name={post.name}
               subtitle={post.topicCategory}
               postId={post.id}
-              collection= {'posts'}
+              collection={'posts'}
             />
 
             <Text style={[globalStyles.p, { color: COLORS.black }]}>
@@ -667,7 +655,12 @@ export default function PostScreen() {
                 { borderTopWidth: 1, borderColor: "#E8E8E8" },
               ]}
             >
-              <UserHeader name={comment.name} subtitle={comment.timestamp} postId={comment.id} collection={'comments'}/>
+              <UserHeader 
+                name={comment.name} 
+                subtitle={comment.timestamp} 
+                postId={comment.id} 
+                collection={'comments'}
+              />
 
               <Text style={[globalStyles.p, { color: COLORS.black }]}>
                 {comment.comment}
@@ -692,7 +685,7 @@ export default function PostScreen() {
                 </View>
               </View>
 
-              {renderMainReplies(comment, comment, 0)}
+              {renderMainReplies(comment)}
             </View>
           ))}
         </View>
