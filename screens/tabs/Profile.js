@@ -450,7 +450,7 @@ export default function Profile({ navigation }) {
 
                   <View style={[styles.questContainer]}>
                     <Text style={globalStyles.p}>Move</Text>
-                    <Text style={[globalStyles.h2, { color: COLORS.blue }]}>
+                    <Text style={[globalStyles.h2, { color: COLORS.pink }]}>
                       {move}
                     </Text>
                   </View>
@@ -465,14 +465,14 @@ export default function Profile({ navigation }) {
                 >
                   <View style={[styles.questContainer]}>
                     <Text style={globalStyles.p}>Music</Text>
-                    <Text style={[globalStyles.h2, { color: COLORS.pink }]}>
+                    <Text style={[globalStyles.h2, { color: COLORS.blue }]}>
                       {music}
                     </Text>
                   </View>
 
                   <View style={[styles.questContainer]}>
                     <Text style={globalStyles.p}>Sleep</Text>
-                    <Text style={[globalStyles.h2, { color: COLORS.green }]}>
+                    <Text style={[globalStyles.h2, { color: COLORS.purple }]}>
                       {sleep}
                     </Text>
                   </View>

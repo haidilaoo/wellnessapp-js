@@ -266,7 +266,7 @@ export default function HomeScreen() {
             resizeMode="contain"
           />
           <View style={[globalStyles.gap24, { marginTop: 250 }]}>
-            <Text style={globalStyles.h3}>Today's quests</Text>
+            {/* <Text style={globalStyles.h3}>Today's quests</Text> */}
             {/* <Button
               title="Manually Reset Emotion"
               onPress={handleManualReset}
@@ -324,6 +324,7 @@ export default function HomeScreen() {
                 <Icon name="chevron-right" size={24} color={COLORS.white} />
               </View>
             </TouchableOpacity>
+            <Text style={globalStyles.h3}>Today's quests</Text>
             <View style={globalStyles.gap16}>
               {quests.length > 0 && currentEmotion !== null ? (
                 quests.map((quest, index) =>

@@ -14,6 +14,7 @@ const COLORS = {
   green: '#0C8852',
   pink: '#C84975',
   white: "#FFFFFF", // Used for secondary buttons
+  purple: '#570BF9',
 
   background: "#F5F6F6",
   backgroundSecondary: "#E6E6E6",
