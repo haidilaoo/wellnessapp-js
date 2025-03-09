@@ -253,7 +253,8 @@ export default function HomeScreen() {
 
     removeQuestFromDatabase(category);
   };
-
+  const allQuestsCompleted =
+    quests.length > 0 && visibleQuests.every((visible) => !visible);
   return (
     <View style={{ flex: 1 }}>
       <ScrollView
@@ -334,19 +335,58 @@ export default function HomeScreen() {
             <Text style={globalStyles.h3}>Today's quests</Text>
             <View style={globalStyles.gap16}>
               {quests.length > 0 && currentEmotion !== null ? (
-                quests.map((quest, index) =>
-                  visibleQuests[index] ? (
-                    <QuestButton
-                      key={index}
-                      title={quest.title}
-                      category={quest.category}
-                      description={quest.description}
-                      onPress={() => {
-                        handleHideComponent(index);
-                        handleCompletedQuest(quest.category);
-                      }}
+                allQuestsCompleted ? (
+                  // All quests completed UI
+                  <View style={styles.allCompletedContainer}>
+                    <Image
+                      source={require("../../assets/noquest.png")}
+                      style={{ width: 167, height: 160 }}
                     />
-                  ) : null
+                    <Text
+                      style={[
+                        globalStyles.pMedium,
+                        { textAlign: "center", color: COLORS.primary, marginTop: 8 },
+                      ]}
+                    >
+                      All quests completed!
+                    </Text>
+                    <Text
+                      style={[
+                        globalStyles.smallText,
+                        { textAlign: "center", opacity: 0.7 , },
+                      ]}
+                    >
+                      Choose another emotion to generate new quests!
+                    </Text>
+                    <TouchableOpacity
+                      style={[styles.newEmotionButton, {marginTop: 16}]}
+                      onPress={() => navigation.navigate("askEmotion")}
+                    >
+                      <Text
+                        style={[
+                          globalStyles.smallTextMedium,
+                          { color: COLORS.primary },
+                        ]}
+                      >
+                        Record new emotion
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  quests.map((quest, index) =>
+                    visibleQuests[index] ? (
+                      <QuestButton
+                        key={index}
+                        title={quest.title}
+                        category={quest.category}
+                        description={quest.description}
+                        onPress={() => {
+                          handleHideComponent(index);
+                          handleCompletedQuest(quest.category);
+                        }}
+                      />
+                    ) : null
+                  )
                 )
               ) : (
                 <>
@@ -422,4 +462,20 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
   },
+   // New styles for the completed quests UI
+   allCompletedContainer: {
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 24,
+  },
+  newEmotionButton: {
+    backgroundColor: COLORS.tertiary,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderColor: COLORS.primary,
+    borderWidth: 1,
+    borderRadius: 8,
+    marginTop: 8,
+  }
 });
