@@ -105,7 +105,7 @@ export default function HomeScreen() {
           console.warn(`No document found for emotion: ${emotion}`);
         }
       } catch (error) {
-        console.error("Error fetching quests:", error);
+        // console.error("Error fetching quests:", error);
       }
     };
 
@@ -214,14 +214,14 @@ export default function HomeScreen() {
 
   const removeQuestFromDatabase = async (category) => {
     const userUid = getAuth().currentUser.uid;
-  
+
     try {
       const questRef = doc(db, "users", userUid, "quest_tally", category);
       const questDoc = await getDoc(questRef);
-  
+
       if (questDoc.exists()) {
         const currentCount = questDoc.data().count;
-  
+
         if (currentCount > 0) {
           await updateDoc(questRef, {
             count: increment(-1), // Decrement count
@@ -243,10 +243,10 @@ export default function HomeScreen() {
       ...prev,
       [category]: Math.max(0, prev[category] - 1), // Ensure count doesn't go below 0
     }));
-  
+
     removeQuestFromDatabase(category);
   };
-    
+
   return (
     <View style={{ flex: 1 }}>
       <ScrollView
@@ -341,7 +341,29 @@ export default function HomeScreen() {
                   ) : null
                 )
               ) : (
-                <Text>Loading or no quests available...</Text>
+                <>
+                  <View
+                    style={{
+                      alignItems: "center",
+                      gap: 16,
+                      paddingHorizontal: 16,
+                    }}
+                  >
+                    <Image
+                      source={require("../../assets/noquest.png")}
+                      style={{ width: 167, height: 160 }}
+                    />
+                    <Text
+                      style={[
+                        globalStyles.smallText,
+                        { textAlign: "center", opacity: 0.5 },
+                      ]}
+                    >
+                      No quests available...{"\n"}
+                      Record your emotion to unlock quests{"\n"} for the day!
+                    </Text>
+                  </View>
+                </>
               )}
             </View>
           </View>
@@ -355,7 +377,10 @@ export default function HomeScreen() {
           message="Quest completed!"
           onDismiss={onDismissSnackBar}
           visible={showNotification}
-          onUndo={() => {handleShowComponent(); handleUndoQuest(quests[lastRemovedIndex].category);}}
+          onUndo={() => {
+            handleShowComponent();
+            handleUndoQuest(quests[lastRemovedIndex].category);
+          }}
           style={{
             position: "absolute",
             bottom: 10, // Adjust as needed

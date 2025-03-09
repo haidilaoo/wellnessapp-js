@@ -141,11 +141,67 @@ export default function askEmotion({ navigation }) {
                   }}
                 />
                 <EmotionButton
+                  title="sad"
+                  emotion="sad"
+                  state={selectedEmotion === "sad"}
+                  onPress={() => {
+                    setSelectedEmotion("sad");
+                  }}
+                />
+                  <EmotionButton
+                  title="dead"
+                  emotion="dead"
+                  state={selectedEmotion === "dead"}
+                  onPress={() => {
+                    setSelectedEmotion("dead");
+                  }}
+                />
+                  <EmotionButton
+                  title="overwhelmed"
+                  emotion="overwhelmed"
+                  state={selectedEmotion === "overwhelmed"}
+                  onPress={() => {
+                    setSelectedEmotion("overwhelmed");
+                  }}
+                />
+                  <EmotionButton
+                  title="confused"
+                  emotion="confused"
+                  state={selectedEmotion === "confused"}
+                  onPress={() => {
+                    setSelectedEmotion("confused");
+                  }}
+                />
+                <EmotionButton
+                  title="tired"
+                  emotion="tired"
+                  state={selectedEmotion === "tired"}
+                  onPress={() => {
+                    setSelectedEmotion("tired");
+                  }}
+                />
+                <EmotionButton
+                  title="bored"
+                  emotion="bored"
+                  state={selectedEmotion === "bored"}
+                  onPress={() => {
+                    setSelectedEmotion("bored");
+                  }}
+                />
+                <EmotionButton
                   title="meh"
                   emotion="meh"
                   state={selectedEmotion === "meh"}
                   onPress={() => {
                     setSelectedEmotion("meh");
+                  }}
+                />
+                <EmotionButton
+                  title="chill"
+                  emotion="chill"
+                  state={selectedEmotion === "chill"}
+                  onPress={() => {
+                    setSelectedEmotion("chill");
                   }}
                 />
                 <EmotionButton
@@ -162,6 +218,22 @@ export default function askEmotion({ navigation }) {
                   state={selectedEmotion === "cute"}
                   onPress={() => {
                     setSelectedEmotion("cute");
+                  }}
+                />
+                 <EmotionButton
+                  title="motivated"
+                  emotion="motivated"
+                  state={selectedEmotion === "motivated"}
+                  onPress={() => {
+                    setSelectedEmotion("motivated");
+                  }}
+                />
+                  <EmotionButton
+                  title="in love"
+                  emotion="love"
+                  state={selectedEmotion === "love"}
+                  onPress={() => {
+                    setSelectedEmotion("love");
                   }}
                 />
                 <EmotionButton

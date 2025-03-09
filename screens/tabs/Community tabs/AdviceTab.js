@@ -14,10 +14,10 @@ import {
   useNavigation,
   useFocusEffect,
 } from "@react-navigation/native";
-import { COLORS, globalStyles } from "../../globalStyles";
+
 import { Chip, FAB } from "react-native-paper";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
-import { db } from "../../firebaseConfig";
+
 import {
   collection,
   doc,
@@ -33,6 +33,8 @@ import {
   where,
   orderBy,
 } from "firebase/firestore";
+import { COLORS, globalStyles } from "../../../globalStyles";
+import { db } from "../../../firebaseConfig";
 
 // Helper function to format timestamps in a Reddit-like style
 const formatRelativeTime = (timestamp) => {
@@ -67,7 +69,7 @@ const formatRelativeTime = (timestamp) => {
   }
 };
 
-export default function ExploreScreen() {
+export default function AdviceTab() {
   const navigation = useNavigation();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -136,7 +138,7 @@ export default function ExploreScreen() {
     const postsRef = collection(db, "posts");
     const q = query(
       postsRef,
-      where("topicCategory", "==", "🌎 Main Lobby"),
+      where("topicCategory", "==", "🤔 Need Advice?"),
       orderBy("timestamp", "desc")
     );
 
@@ -250,7 +252,7 @@ export default function ExploreScreen() {
                         source={
                           post.profileImageUri
                             ? { uri: post.profileImageUri }
-                            : require("../../assets/Avatar.png")
+                            : require("../../../assets/Avatar.png")
                         }
                         style={{
                           width: 56,

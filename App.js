@@ -4,6 +4,7 @@ import { createStackNavigator } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { useFonts } from "expo-font";
 import { LogBox } from "react-native";
+import Icon from "react-native-vector-icons/Ionicons";
 // Context
 import { UserProvider } from "./screens/onboarding/UserContext.js";
 
@@ -144,22 +145,31 @@ const CommunityFlow = () => {
 // Main App Tabs (Logged-In)
 const MainAppFlow = () => {
   return (
-    <Tab.Navigator>
+    <Tab.Navigator
+    screenOptions={({ route }) => ({
+      headerShown: false,
+      tabBarIcon: ({ color, size }) => {
+        
+        let iconName;
+
+        if (route.name === "Home") {
+          iconName = "home-outline"; // Home icon
+        } else if (route.name === "Community") {
+          iconName = "people-outline"; // Community icon
+        } else if (route.name === "Profile") {
+          iconName = "person-outline"; // Profile icon
+        }
+
+        return <Icon name={iconName} size={24} color={color} />;
+      },
+      tabBarActiveTintColor: "green", // Active tab color
+      tabBarInactiveTintColor: "gray", // Inactive tab color
+    })}>
       <Tab.Screen
         name="Home"
         component={HomeScreen}
         options={{ headerShown: false }}
       />
-      {/* <Tab.Screen
-        name="Therapist"
-        component={TherapistScreen}
-        options={{ headerShown: false }}
-      /> */}
-      {/* <Tab.Screen
-        name="Community"
-        component={CommunityFlow}
-        options={{ headerShown: false }}
-      /> */}
       <Tab.Screen
         name="Community"
         component={TabScreen}

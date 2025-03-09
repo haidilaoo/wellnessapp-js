@@ -94,6 +94,7 @@ export default function CreatePost() {
         message: message,
         timestamp: serverTimestamp(),
         topicCategory: topic, // Now stored as a field instead of being a subcollection
+        profileImageUri: userDocSnap.data().profileImageUri,
         likes: 0,
         replyCount: 0,
       });

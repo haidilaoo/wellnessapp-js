@@ -10,6 +10,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { COLORS, globalStyles } from "../../../globalStyles";
 import { FAB } from "react-native-paper";
 import PostScreen from "../PostScreen";
+import DeepTalkTab from "../Community tabs/DeepTalkTab";
+import AdviceTab from "../Community tabs/AdviceTab";
+import VentTab from "../Community tabs/VentTab";
+import ToxicTab from "../Community tabs/ToxicTab";
 
 export default function TabScreen() {
   const Tab = createMaterialTopTabNavigator();
@@ -30,6 +34,10 @@ export default function TabScreen() {
       >
         <Tab.Screen name="All" component={FeedScreen} />
         <Tab.Screen name="Main Lobby" component={ExploreScreen} />
+        <Tab.Screen name="Deep Talks & Feels" component={DeepTalkTab} />
+        <Tab.Screen name="Need Advice" component={AdviceTab} />
+        <Tab.Screen name="Vent & Rant" component={VentTab} />
+        <Tab.Screen name="Toxic or Nah" component={ToxicTab} />
       </Tab.Navigator>
     );
   };
