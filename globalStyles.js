@@ -9,12 +9,17 @@ const COLORS = {
   tertiary: "#F2F5ED", //Brand/light green
   tertiary2: "#F0FCF2", //Brand/light green
   orange: "#FF702C", // Brand/orange
+  lightOrange: '#FFF5F0',
   darkOrange: '#F26522',
   blue: '#5176BA',
+  lightBlue: '#F0F6FF',
   green: '#0C8852',
   pink: '#C84975',
+  lightpink: '#FFF0FA',
+
   white: "#FFFFFF", // Used for secondary buttons
   purple: '#570BF9',
+  lightPurple: '#F6F0FF',
 
   background: "#F5F6F6",
   backgroundSecondary: "#E6E6E6",

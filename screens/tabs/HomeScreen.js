@@ -73,16 +73,23 @@ export default function HomeScreen() {
 
           // Convert to objects with category labels
           const meditateQuests = meditate.map((q) => ({
-            title: q,
+            title: q.title,
+            description: q.description,
             category: "Meditate",
           }));
-          const moveQuests = move.map((q) => ({ title: q, category: "Move" }));
+          const moveQuests = move.map((q) => ({
+            title: q.title,
+            description: q.description,
+            category: "Move",
+          }));
           const musicQuests = music.map((q) => ({
-            title: q,
+            title: q.title,
+            description: q.description,
             category: "Music",
           }));
           const sleepQuests = sleep.map((q) => ({
-            title: q,
+            title: q.title,
+            description: q.description,
             category: "Sleep",
           }));
           // Combine non-sleep quests
@@ -333,6 +340,7 @@ export default function HomeScreen() {
                       key={index}
                       title={quest.title}
                       category={quest.category}
+                      description={quest.description}
                       onPress={() => {
                         handleHideComponent(index);
                         handleCompletedQuest(quest.category);

@@ -7,7 +7,7 @@ import { LogBox } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 // Context
 import { UserProvider } from "./screens/onboarding/UserContext.js";
-
+import { addQuestsToFirestore } from './database/addQuests';
 // Onboarding Screens
 import StartScreen from "./screens/onboarding/StartScreen";
 // import LoginScreen from "./screens/onboarding/LoginScreen";
@@ -283,6 +283,13 @@ export default function App() {
   if (!loaded) {
     return null;
   }
+
+  //Populate quests collection in Firestore database
+  // useEffect(() => {
+  //   // Call the function to add quests to Firestore on app load
+  //   addQuestsToFirestore();
+  // }, []);
+
   return (
     <UserProvider>
       <RootNavigator />
