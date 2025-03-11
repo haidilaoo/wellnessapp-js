@@ -7,6 +7,7 @@ import {
   Dimensions,
   TouchableWithoutFeedback,
   Keyboard,
+  Pressable,
 } from "react-native";
 import { Provider as PaperProvider } from "react-native-paper";
 
@@ -97,7 +98,6 @@ export default function askEmotion({ navigation }) {
         });
       }
       console.log("Emotion tally updated");
-
     } catch (error) {
       console.error("Error saving emotion to database:", error);
     }
@@ -116,7 +116,7 @@ export default function askEmotion({ navigation }) {
             <Text style={[globalStyles.h2, globalStyles.textCenter]}>
               How are you feeling today?
             </Text>
-            <Text style={[globalStyles.p, {textAlign: "center",}]}>
+            <Text style={[globalStyles.p, { textAlign: "center" }]}>
               Careot will give suggestions & insights {"\n"} based on your mood
             </Text>
           </View>
@@ -132,7 +132,7 @@ export default function askEmotion({ navigation }) {
               onScroll={handleScrollChange}
             >
               <View style={[globalStyles.gap32, globalStyles.row]}>
-              <EmotionButton
+                <EmotionButton
                   title="angry"
                   emotion="angry"
                   state={selectedEmotion === "angry"}
@@ -148,7 +148,7 @@ export default function askEmotion({ navigation }) {
                     setSelectedEmotion("sad");
                   }}
                 />
-                  <EmotionButton
+                <EmotionButton
                   title="dead"
                   emotion="dead"
                   state={selectedEmotion === "dead"}
@@ -156,7 +156,7 @@ export default function askEmotion({ navigation }) {
                     setSelectedEmotion("dead");
                   }}
                 />
-                  <EmotionButton
+                <EmotionButton
                   title="overwhelmed"
                   emotion="overwhelmed"
                   state={selectedEmotion === "overwhelmed"}
@@ -164,7 +164,7 @@ export default function askEmotion({ navigation }) {
                     setSelectedEmotion("overwhelmed");
                   }}
                 />
-                  <EmotionButton
+                <EmotionButton
                   title="confused"
                   emotion="confused"
                   state={selectedEmotion === "confused"}
@@ -212,7 +212,7 @@ export default function askEmotion({ navigation }) {
                     setSelectedEmotion("silly");
                   }}
                 />
-                        <EmotionButton
+                <EmotionButton
                   title="cute"
                   emotion="cute"
                   state={selectedEmotion === "cute"}
@@ -220,7 +220,7 @@ export default function askEmotion({ navigation }) {
                     setSelectedEmotion("cute");
                   }}
                 />
-                 <EmotionButton
+                <EmotionButton
                   title="motivated"
                   emotion="motivated"
                   state={selectedEmotion === "motivated"}
@@ -228,7 +228,7 @@ export default function askEmotion({ navigation }) {
                     setSelectedEmotion("motivated");
                   }}
                 />
-                  <EmotionButton
+                <EmotionButton
                   title="in love"
                   emotion="love"
                   state={selectedEmotion === "love"}
@@ -280,17 +280,31 @@ export default function askEmotion({ navigation }) {
             </View>
           </View>
         </View>
-        <Button
-          title="Select mood"
-          style={[
-            { alignItems: "flex-start" },
-            selectedEmotion === null ? globalStyles.disabled : null,
-          ]}
-          onPress={() => {
-            insertEmotionToDatabase();
-            navigation.navigate("askReason");
-          }}
-        />
+        <View>
+          <Button
+            title="Select mood"
+            style={[
+              { alignItems: "flex-start" },
+              selectedEmotion === null ? globalStyles.disabled : null,
+            ]}
+            onPress={() => {
+              if (selectedEmotion !== null) {
+                insertEmotionToDatabase();
+                navigation.navigate("askReason");
+              }
+            }}
+          />
+          <Pressable
+            onPress={() => {
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'HomeMain' }],
+              });
+            }}
+          >
+            <Text style={[ globalStyles.pMedium, { alignSelf: "center", marginTop: 24, color: COLORS.blackSecondary}]}>Maybe later</Text>
+          </Pressable>
+        </View>
       </View>
     </PaperProvider>
   );

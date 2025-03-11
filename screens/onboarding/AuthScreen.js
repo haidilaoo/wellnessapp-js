@@ -22,6 +22,15 @@ import {
 import { initializeAuth, getReactNativePersistence } from "firebase/auth";
 import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
 
+
+//Google Sign in
+import * as Google from "expo-auth-session/providers/google";
+import * as AuthSession from "expo-auth-session";
+import * as WebBrowser from 'expo-web-browser';
+import { GoogleAuthProvider,  signInWithCredential } from "@firebase/auth";
+
+WebBrowser.maybeCompleteAuthSession();
+
 //FOR DATABASE FIRESTORE
 import { db } from "../../firebaseConfig";
 import { doc, setDoc, getDoc } from "firebase/firestore";
@@ -55,7 +64,10 @@ const AuthScreen = ({
   isLogin,
   setIsLogin,
   handleAuthentication,
+  promptAsync
 }) => {
+
+
   return (
     <PaperProvider theme={theme}>
       <View style={[globalStyles.container, globalStyles.spaceBetween]}>
@@ -99,7 +111,7 @@ const AuthScreen = ({
           <Text style={[{ margin: 32, alignSelf: "center" }]}>or</Text>
           <Button
             title="Continue with Google"
-            onPress={handleAuthentication}
+            // onPress={() => promptAsync()}
             variant="secondary"
             textColor={COLORS.black}
             // iconName="google"
@@ -209,6 +221,7 @@ export default App = ({ route }) => {
             email: email,
             createdAt: new Date(),
             isOnboardingCompleted: false, // Set onboarding status to false initially
+            profileImageUri: null,
           });
           console.log("User registered and added to Firestore:", user.uid);
    
@@ -218,6 +231,30 @@ export default App = ({ route }) => {
       console.error("Authentication error:", error.message);
     }
   };
+
+  const discovery = {
+    authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
+    tokenEndpoint: 'https://oauth2.googleapis.com/token',
+  };
+// const [userInfo, setUserInfo] = React.useState();
+//   const [request, response, promptAsync] = Google.useAuthRequest({
+//     androidClientId:
+//     '1011145449920-mjptpu7sveg951hk401imblhatjujhcb.apps.googleusercontent.com',
+//     iosClientId: '',
+//     webClientId: '1011145449920-d1rnhn4u2h0tbntcqjv4eoat4evhbbii.apps.googleusercontent.com',
+//     redirectUri: AuthSession.makeRedirectUri({
+//       useProxy: true, // Uses Expo’s Auth proxy
+//     }),
+  
+//   },discovery);
+//   React.useEffect(() => {
+//     if (response?.type === 'success') {
+//       const { id_token } = response.params;
+//       const credential = GoogleAuthProvider.credential(id_token);
+//       signInWithCredential(auth, credential);
+//     }
+//   }, [response]);
+  
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -245,6 +282,7 @@ export default App = ({ route }) => {
           setConfirmPassword={setConfirmPassword} // Pass state setters to AuthScreen
           setIsLogin={setIsLogin}
           handleAuthentication={handleAuthentication}
+          // promptAsync={promptAsync}
         />
       )}
     </ScrollView>

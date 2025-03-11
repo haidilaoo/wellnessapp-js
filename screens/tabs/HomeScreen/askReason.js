@@ -7,6 +7,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
 } from "react-native";
 import { TextInput, Provider as PaperProvider, Chip } from "react-native-paper";
 import { COLORS, globalStyles, theme } from "../../../globalStyles";
@@ -25,41 +26,43 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "../../../firebaseConfig";
-import { CommonActions, } from "@react-navigation/native";
+import { CommonActions } from "@react-navigation/native";
 
-export default function askReason({navigation}) {
+export default function askReason({ navigation }) {
   const [selectedReason, setSelectedReason] = useState([]);
   const [memo, setMemo] = useState(null);
   const userUid = getAuth().currentUser.uid;
 
   const handleChipPress = (label) => {
-    setSelectedReason((prevReasons) =>
-      prevReasons.includes(label)
-        ? prevReasons.filter((reason) => reason !== label) // Deselect
-        : [...prevReasons, label] // Select
+    setSelectedReason(
+      (prevReasons) =>
+        prevReasons.includes(label)
+          ? prevReasons.filter((reason) => reason !== label) // Deselect
+          : [...prevReasons, label] // Select
     );
   };
   const insertMemoToDatabase = async () => {
     try {
-      await setDoc(doc(db, "users", userUid),
-    {
-      memo: memo,
-    }, {
-      merge: true
-    });
+      await setDoc(
+        doc(db, "users", userUid),
+        {
+          memo: memo,
+        },
+        {
+          merge: true,
+        }
+      );
 
-    console.log('Memo inserted into database.');
+      console.log("Memo inserted into database.");
     } catch (error) {
       console.error("Error inserting Memo into database: ", error);
     }
-
-  }
-
+  };
 
   const insertReasonToDatabase = async () => {
     // const userUid = getAuth().currentUser.uid;
     const reasons = selectedReason;
-   
+
     try {
       await setDoc(
         doc(db, "users", userUid),
@@ -70,67 +73,69 @@ export default function askReason({navigation}) {
       );
       console.log("Current reasons saved to database");
 
-     //2. Update reason_tally subcollection
+      //2. Update reason_tally subcollection
 
-     for (let reason of reasons) {
-      if (!reason || typeof reason !== "string") {
-        console.error("Invalid reason:", reason);
-        continue; // Skip invalid reasons
+      for (let reason of reasons) {
+        if (!reason || typeof reason !== "string") {
+          console.error("Invalid reason:", reason);
+          continue; // Skip invalid reasons
+        }
+
+        // Ensure reason is safe for Firestore document ID
+        const safeReason = reason.replace(/[.#$/[\]]/g, "_");
+
+        const reasonRef = doc(db, "users", userUid, "reason_tally", safeReason);
+        const reasonDoc = await getDoc(reasonRef);
+
+        if (reasonDoc.exists()) {
+          await updateDoc(reasonRef, {
+            count: increment(1),
+            last_updated: serverTimestamp(),
+          });
+          console.log("Updated reason tally:", safeReason);
+        } else {
+          await setDoc(reasonRef, {
+            count: 1,
+            last_updated: serverTimestamp(),
+          });
+          console.log("Created new reason tally:", safeReason);
+        }
       }
 
-      // Ensure reason is safe for Firestore document ID
-      const safeReason = reason.replace(/[.#$/[\]]/g, "_");
-
-      const reasonRef = doc(db, "users", userUid, "reason_tally", safeReason);
-      const reasonDoc = await getDoc(reasonRef);
-
-      if (reasonDoc.exists()) {
-        await updateDoc(reasonRef, {
-          count: increment(1),
-          last_updated: serverTimestamp(),
-        });
-        console.log("Updated reason tally:", safeReason);
-      } else {
-        await setDoc(reasonRef, {
-          count: 1,
-          last_updated: serverTimestamp(),
-        });
-        console.log("Created new reason tally:", safeReason);
-      }
-    }
-          
-       // Fetch user's current emotion
+      // Fetch user's current emotion
       const userDoc = await getDoc(doc(db, "users", userUid));
       const emotion = userDoc.exists() ? userDoc.data().currentEmotion : null;
       if (emotion) {
         const emotionRef = doc(db, "users", userUid, "emotion_tally", emotion);
         const emotionDoc = await getDoc(emotionRef); // Get the emotion_tally document);
         // Get the current 'reasons' array from the document
-      const currentReasons = emotionDoc.exists() ? emotionDoc.data().reasons || [] : [];
-      // Loop through each reason in the array
-      const newReasons = reasons.filter(reason => !currentReasons.includes(reason));
+        const currentReasons = emotionDoc.exists()
+          ? emotionDoc.data().reasons || []
+          : [];
+        // Loop through each reason in the array
+        const newReasons = reasons.filter(
+          (reason) => !currentReasons.includes(reason)
+        );
 
-      if (newReasons.length > 0) {
-        // Add only the unique reasons
-        await updateDoc(emotionRef, {
-          reasons: [...currentReasons, ...newReasons],
-        });
-        console.log("Reasons added to emotion_tally");
+        if (newReasons.length > 0) {
+          // Add only the unique reasons
+          await updateDoc(emotionRef, {
+            reasons: [...currentReasons, ...newReasons],
+          });
+          console.log("Reasons added to emotion_tally");
+        } else {
+          console.log("All reasons already exist in the emotion_tally");
+        }
       } else {
-        console.log("All reasons already exist in the emotion_tally");
+        console.warn("No emotion found for user.");
       }
-    } else {
-      console.warn("No emotion found for user.");
-    }
-        
     } catch (error) {
       console.error("Error saving reasons to database:", error);
     }
   };
 
-
   //NAVIGATE TO MAINAPP FLOW
-const navigateToMainScreen = () => {
+  const navigateToMainScreen = () => {
     navigation.dispatch(
       CommonActions.reset({
         index: 0,
@@ -189,7 +194,7 @@ const navigateToMainScreen = () => {
               >
                 <CustomChip
                   label="people"
-                  onPress={(label) => { 
+                  onPress={(label) => {
                     setSelectedReason((prevReasons) => [...prevReasons, label]);
                   }}
                 />
@@ -231,7 +236,7 @@ const navigateToMainScreen = () => {
                 />
                 <CustomChip
                   label="health"
-                  onPress={(label) => { 
+                  onPress={(label) => {
                     setSelectedReason((prevReasons) => [...prevReasons, label]);
                   }}
                 />
@@ -274,15 +279,40 @@ const navigateToMainScreen = () => {
                 ></TextInput>
               </View>
             </View>
-            <Button
-              title="Done"
-              style={{ alignItems: "flex-start" ,}}
-              onPress={() => {
-                insertReasonToDatabase();
-                insertMemoToDatabase();
-                navigateToMainScreen();
-              }}
-            />
+            <View>
+              <Button
+                title="Done"
+                style={[
+                  { alignItems: "flex-start" },
+                  selectedReason.length === 0 ? globalStyles.disabled : null,
+                ]}
+                onPress={() => {
+                  if (selectedReason.length !== 0) {
+                    insertReasonToDatabase();
+                    insertMemoToDatabase();
+                    navigateToMainScreen();
+                  }
+                }}
+              />
+              <Pressable
+                onPress={() => {
+                  navigateToMainScreen();
+                }}
+              >
+                <Text
+                  style={[
+                    globalStyles.pMedium,
+                    {
+                      alignSelf: "center",
+                      marginTop: 24,
+                      color: COLORS.blackSecondary,
+                    },
+                  ]}
+                >
+                  Skip
+                </Text>
+              </Pressable>
+            </View>
           </View>
         </ScrollView>
       </PaperProvider>

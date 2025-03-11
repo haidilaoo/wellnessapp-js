@@ -17,3 +17,8 @@ const firebaseConfig = {
   
 
   export { db }; // Export db so you can use it anywhere
+
+
+  //CLIENT IDs
+  //Android: 1011145449920-mjptpu7sveg951hk401imblhatjujhcb.apps.googleusercontent.com
+  //Webapp: 1011145449920-d1rnhn4u2h0tbntcqjv4eoat4evhbbii.apps.googleusercontent.com

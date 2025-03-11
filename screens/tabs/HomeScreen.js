@@ -356,7 +356,7 @@ export default function HomeScreen() {
                         { textAlign: "center", opacity: 0.7 , },
                       ]}
                     >
-                      Choose another emotion to generate new quests!
+                      Choose another emotion to generate new quests
                     </Text>
                     <TouchableOpacity
                       style={[styles.newEmotionButton, {marginTop: 16}]}

@@ -33,6 +33,8 @@ import ExploreScreen from "./screens/tabs/ExploreScreen.js";
 import TabScreen from "./screens/tabs/Community/TabScreen.js";
 import PostScreen from "./screens/tabs/PostScreen.js";
 
+
+
 // Navigation Stacks
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -43,6 +45,7 @@ const CommunityStack = createStackNavigator();
 LogBox.ignoreLogs([
   "Text strings must be rendered within a <Text> component",
   "Slider: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.",
+  "The action 'RESET' with payload {\"index\":0,\"routes\":[{\"name\":\"AuthFlow\"}]} was not handled by any navigator."
 ]);
 
 // Authentication Flow
@@ -284,6 +287,7 @@ export default function App() {
     return null;
   }
 
+  
   //Populate quests collection in Firestore database
   // useEffect(() => {
   //   // Call the function to add quests to Firestore on app load
