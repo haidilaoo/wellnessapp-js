@@ -53,6 +53,7 @@ export default function CreatePost() {
   const [message, setMessage] = useState();
   const [topic, setTopic] = useState("🌎 Main Lobby");
   const userUid = getAuth().currentUser.uid;
+  const [profilePic, setProfilePic] = useState();
 
   //OLD NESTING STRUCTURE
   // const insertPostToDatabase = async () => {
@@ -79,14 +80,30 @@ export default function CreatePost() {
   //   }
   // };
 
+  //fetch profile pic
+  useEffect(() => {
+    fetchPic();
+  });
+
+  const fetchPic = async () => {
+    try {
+      const userDocRef = doc(db, "users", userUid);
+      const userDocSnap = await getDoc(userDocRef);
+      const profilePic = userDocSnap.data().profileImageUri;
+      setProfilePic(profilePic);
+    } catch (error) {}
+  };
+
   const insertPostToDatabase = async () => {
     try {
       const userDocRef = doc(db, "users", userUid);
       const userDocSnap = await getDoc(userDocRef);
-  
+
       // Ensure the user document exists before accessing data
-      const name = userDocSnap.exists() ? userDocSnap.data().nickname : "Unknown";
-  
+      const name = userDocSnap.exists()
+        ? userDocSnap.data().nickname
+        : "Unknown";
+
       // Reference to the top-level "posts" collection
       const postRef = await addDoc(collection(db, "posts"), {
         user: userUid,
@@ -98,13 +115,12 @@ export default function CreatePost() {
         likes: 0,
         replyCount: 0,
       });
-  
+
       console.log("New post inserted into database with ID:", postRef.id);
     } catch (error) {
       console.error("Error inserting new post into database:", error);
     }
   };
-  
 
   const [visible, setVisible] = React.useState(false);
   const showModal = () => setVisible(true);
@@ -307,10 +323,11 @@ export default function CreatePost() {
             }}
           >
             <Image
-              source={require("../assets/Avatar.png")}
+              source={profilePic? { uri: profilePic} : require("../assets/Avatar.png")}
               style={{
                 width: 56,
                 height: 56,
+                borderRadius: 56/2,
               }}
             />
             <TextInput
