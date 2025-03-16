@@ -42,13 +42,13 @@ import { updateProfileImageInComments } from "../../updateProfileImageInComments
 export default function Profile({ navigation }) {
   const [profileImage, setProfileImage] = useState(null);
   const { width } = useWindowDimensions();
-  
+
   // Save the profile image to state and Firestore
   const saveImage = async (imageUri) => {
     try {
       setProfileImage(imageUri);
       setVisibleUpload(false);
-      
+
       // You would typically save the image URI to Firestore here
       const userRef = doc(db, "users", userUid);
       await updateDoc(userRef, { profileImageUri: imageUri });
@@ -59,17 +59,18 @@ export default function Profile({ navigation }) {
       console.error("Error saving image:", error);
     }
   };
-  
+
   // Camera functionality
   const takePhoto = async () => {
     try {
-      const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
-      
-      if (cameraPermission.status !== 'granted') {
+      const cameraPermission =
+        await ImagePicker.requestCameraPermissionsAsync();
+
+      if (cameraPermission.status !== "granted") {
         alert("Camera permission is required to take photos");
         return;
       }
-      
+
       let result = await ImagePicker.launchCameraAsync({
         allowsEditing: true,
         aspect: [1, 1],
@@ -83,17 +84,18 @@ export default function Profile({ navigation }) {
       console.error("Error taking photo:", error);
     }
   };
-  
+
   // Gallery functionality
   const pickImage = async () => {
     try {
-      const galleryPermission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      
-      if (galleryPermission.status !== 'granted') {
+      const galleryPermission =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (galleryPermission.status !== "granted") {
         alert("Gallery permission is required to select photos");
         return;
       }
-      
+
       let result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
@@ -116,8 +118,8 @@ export default function Profile({ navigation }) {
       alert(error);
       setVisibleUpload(false);
     }
-  }
-  
+  };
+
   const [nickname, setNickname] = useState(null);
   const [memo, setMemo] = useState(null);
   const [meditate, setMeditate] = useState(null);
@@ -132,9 +134,9 @@ export default function Profile({ navigation }) {
   const handleSelect = (circle) => {
     setSelectedCircle(circle);
   };
-  
+
   const [circles, setCircles] = useState([]);
-  
+
   // 1st useEffect: Fetch top 5 emotions
   useEffect(() => {
     const fetchTopEmotions = async () => {
@@ -151,7 +153,7 @@ export default function Profile({ navigation }) {
         while (emotions.length < 5) {
           emotions.push({ id: "N/A", count: 0 });
         }
-
+console.log("Circles data:", circles);
         setTopEmotions(emotions);
       } catch (error) {
         console.error("Error fetching top emotions:", error);
@@ -166,7 +168,11 @@ export default function Profile({ navigation }) {
   // Add this useEffect to map topEmotions to circles whenever topEmotions changes
   useEffect(() => {
     if (topEmotions.length > 0) {
-      // Create a size scale based on the emotion count
+
+      // Filter out N/A emotions first
+    const validEmotions = topEmotions.filter(emotion => emotion.id !== "N/A");
+    if (validEmotions.length > 0)
+    {  // Create a size scale based on the emotion count
       const maxSize = 160;
       const minSize = 80;
 
@@ -199,8 +205,12 @@ export default function Profile({ navigation }) {
         };
       });
 
-      setCircles(mappedCircles);
+      setCircles(mappedCircles);}
+    } else {
+      // If there are no valid emotions, set circles to empty array
+      setCircles([]);
     }
+  
   }, [topEmotions]);
 
   // Fetch reasons from Firestore when selectedCircle changes
@@ -240,12 +250,12 @@ export default function Profile({ navigation }) {
 
       try {
         const userDoc = await getDoc(doc(db, "users", userUid));
-        
+
         // Fetch profile image if available
         if (userDoc.exists() && userDoc.data().profileImageUri) {
           setProfileImage(userDoc.data().profileImageUri);
         }
-        
+
         //FETCH NICKNAME
         const userRef = doc(db, "users", userUid);
         // Listen for real-time updates
@@ -395,7 +405,11 @@ export default function Profile({ navigation }) {
               onPress={showUploadModal}
             >
               <Image
-                source={profileImage ? { uri: profileImage } : require("../../assets/Avatar.png")}
+                source={
+                  profileImage
+                    ? { uri: profileImage }
+                    : require("../../assets/Avatar.png")
+                }
                 style={{
                   width: 120,
                   height: 120,
@@ -489,17 +503,37 @@ export default function Profile({ navigation }) {
                       width: "100%",
                     }}
                   >
-                    {circles.length > 0 ? (
+                    { circles.length > 0 ? (
                       <CircleArrangement
                         circles={circles}
                         selectedCircle={selectedCircle}
                         onSelect={handleSelect}
                       />
                     ) : (
-                      <Text>Loading emotions...</Text>
+                      <View
+                        style={{
+                          alignItems: "center",
+                          gap: 16,
+                          paddingHorizontal: 16,
+                        }}
+                      >
+                        <Image
+                          source={require("../../assets/noemotion.png")}
+                          style={{ width: 139, height: 139 }}
+                        />
+                        <Text
+                          style={[
+                            globalStyles.smallText,
+                            { textAlign: "center", opacity: 0.5 },
+                          ]}
+                        >
+                          No emotions recorded yet...{"\n"}
+                          Record your first emotion!
+                        </Text>
+                      </View>
                     )}
                   </View>
-                  <View
+                  {circles.length > 0 ? (<View
                     style={{
                       backgroundColor: "#F7F8FA",
                       padding: 16,
@@ -523,7 +557,8 @@ export default function Profile({ navigation }) {
                             globalStyles.row,
                           ]}
                         >
-                          {reasons.map((reason, index) => (
+                          {reasons.length !== 0 ?
+                          (reasons.map((reason, index) => (
                             <Chip
                               key={index}
                               style={{
@@ -534,7 +569,17 @@ export default function Profile({ navigation }) {
                             >
                               {reason}
                             </Chip>
-                          ))}
+                          )) ) : (<Chip
+                            
+                            style={{
+                              backgroundColor: COLORS.white,
+                              alignSelf: "flex-start",
+                            }}
+                            textStyle={{ color: COLORS.blackSecondary }}
+                          >
+                           No reasons recorded yet
+                          </Chip>)
+                          }
                         </View>
                       </>
                     ) : (
@@ -556,7 +601,7 @@ export default function Profile({ navigation }) {
                         </Chip>
                       </>
                     )}
-                  </View>
+                  </View>) : null }
                 </View>
               </View>
               <View style={styles.whiteContainer}>
