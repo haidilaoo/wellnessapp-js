@@ -191,13 +191,7 @@ export default function ToxicTab() {
       try {
         const likedPosts = {};
         for (const post of posts) {
-          const likeRef = doc(
-            db,
-            "posts",
-            post.id,
-            "likes",
-            userUid
-          );
+          const likeRef = doc(db, "posts", post.id, "likes", userUid);
           const likeDoc = await getDoc(likeRef);
           likedPosts[post.id] = likeDoc.exists();
         }
@@ -238,9 +232,28 @@ export default function ToxicTab() {
               {loading ? (
                 <Text style={globalStyles.p}>Loading posts...</Text>
               ) : posts.length === 0 ? (
-                <Text style={globalStyles.p}>
-                  No posts yet. Be the first to post!
-                </Text>
+                <View
+                  style={{
+                    alignItems: "center",
+                    gap: 16,
+                    paddingHorizontal: 16,
+                    marginTop: 56,
+                  }}
+                >
+                  <Image
+                    source={require("../../../assets/nopost.png")}
+                    style={{ width: 183, height: 102 }}
+                  />
+                  <Text
+                    style={[
+                      globalStyles.smallText,
+                      { textAlign: "center", opacity: 0.5 },
+                    ]}
+                  >
+                    No posts in this topic yet...{"\n"}
+                    Be the first to post!
+                  </Text>
+                </View>
               ) : (
                 posts.map((post) => (
                   <View
@@ -312,28 +325,34 @@ export default function ToxicTab() {
                             </Text>
                           </View>
                         </Pressable>
-                        <Pressable onPress={() => navigation.navigate('PostScreen', { post, heart })}>
-                        <View
-                          style={{
-                            flexDirection: "row",
-                            gap: 8,
-                            alignItems: "center",
-                          }}
+                        <Pressable
+                          onPress={() =>
+                            navigation.navigate("PostScreen", { post, heart })
+                          }
                         >
-                          <Icon
-                            name="comment-outline"
-                            size={24}
-                            color={"#b3b3b3"}
-                          />
-                          <Text
-                            style={[globalStyles.pBold, { color: "#b3b3b3" }]}
+                          <View
+                            style={{
+                              flexDirection: "row",
+                              gap: 8,
+                              alignItems: "center",
+                            }}
                           >
-                            {post.replyCount || 0}
-                          </Text>
-                        </View>
+                            <Icon
+                              name="comment-outline"
+                              size={24}
+                              color={"#b3b3b3"}
+                            />
+                            <Text
+                              style={[globalStyles.pBold, { color: "#b3b3b3" }]}
+                            >
+                              {post.replyCount || 0}
+                            </Text>
+                          </View>
                         </Pressable>
                       </View>
-                      <Text style={[globalStyles.p, {color: '#b3b3b3'}]}>{post.timestamp}</Text>
+                      <Text style={[globalStyles.p, { color: "#b3b3b3" }]}>
+                        {post.timestamp}
+                      </Text>
                     </View>
                   </View>
                 ))

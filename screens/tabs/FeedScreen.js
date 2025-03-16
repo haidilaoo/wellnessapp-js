@@ -79,33 +79,33 @@ export default function CommunityScreen() {
   //     try {
   //       setHeart((prevHeart) => {
   //         const newHeartState = !prevHeart[postId];
-    
+
   //         // Optimistically update likes count without Firestore
   //         setLikes((prevLikes) => ({
   //           ...prevLikes,
   //           [postId]: newHeartState ? (prevLikes[postId] || 0) + 1 : (prevLikes[postId] || 0) - 1,
   //         }));
-    
+
   //         return { ...prevHeart, [postId]: newHeartState };
   //       });
-    
+
   //       const likeRef = doc(db, "posts", categoryName, "posts", postId, "likes", userUid);
   //       const likeDoc = await getDoc(likeRef);
   //       const isCurrentlyLiked = likeDoc.exists();
-    
+
   //       if (isCurrentlyLiked) {
   //         await deleteDoc(likeRef);
   //       } else {
   //         await setDoc(likeRef, { liked: true, timestamp: serverTimestamp() });
   //       }
-    
+
   //       // Update Firestore like count in the background
   //       const postRef = doc(db, "posts", categoryName, "posts", postId);
   //       await updateDoc(postRef, {
   //         likes: isCurrentlyLiked ? increment(-1) : increment(1),
   //         last_updated: serverTimestamp(),
   //       });
-    
+
   //     } catch (error) {
   //       console.error("Error toggling like:", error);
   //     }
@@ -116,82 +116,84 @@ export default function CommunityScreen() {
     try {
       setHeart((prevHeart) => {
         const newHeartState = !prevHeart[postId];
-  
+
         // Optimistically update likes count without Firestore
         setLikes((prevLikes) => ({
           ...prevLikes,
-          [postId]: newHeartState ? (prevLikes[postId] || 0) + 1 : (prevLikes[postId] || 0) - 1,
+          [postId]: newHeartState
+            ? (prevLikes[postId] || 0) + 1
+            : (prevLikes[postId] || 0) - 1,
         }));
-  
+
         return { ...prevHeart, [postId]: newHeartState };
       });
-  
+
       const likeRef = doc(db, "posts", postId, "likes", userUid);
       const likeDoc = await getDoc(likeRef);
       const isCurrentlyLiked = likeDoc.exists();
-  
+
       if (isCurrentlyLiked) {
         await deleteDoc(likeRef);
       } else {
         await setDoc(likeRef, { liked: true, timestamp: serverTimestamp() });
       }
-  
+
       // Update the like count in Firestore
       const postRef = doc(db, "posts", postId);
       await updateDoc(postRef, {
         likes: isCurrentlyLiked ? increment(-1) : increment(1),
         last_updated: serverTimestamp(),
       });
-  
     } catch (error) {
       console.error("Error toggling like:", error);
     }
   };
-  
+
   useEffect(() => {
     const fetchUserLikes = async () => {
       if (posts.length === 0) return;
-  
+
       try {
         const likedPosts = {};
         const likeCounts = {}; // Store likes count separately
-  
+
         // Fetch likes for each post in parallel
         const likePromises = posts.map(async (post) => {
           const likeRef = doc(db, "posts", post.id, "likes", userUid);
           const likeDoc = await getDoc(likeRef);
-  
+
           // Store whether the user liked this post
           likedPosts[post.id] = likeDoc.exists();
-  
+
           // Fetch like count separately to avoid flickering
           const postRef = doc(db, "posts", post.id);
           const postDoc = await getDoc(postRef);
-          likeCounts[post.id] = postDoc.exists() ? postDoc.data().likes || 0 : 0;
+          likeCounts[post.id] = postDoc.exists()
+            ? postDoc.data().likes || 0
+            : 0;
         });
-  
+
         await Promise.all(likePromises); // Wait for all like checks to complete
-  
+
         setHeart(likedPosts);
         setLikes(likeCounts); // Set likes count separately if needed
       } catch (error) {
         console.error("Error fetching likes:", error);
       }
     };
-  
+
     fetchUserLikes();
   }, [posts]); // Run when posts change
-  
-  
- //FETCH POSTS 
+
+  //FETCH POSTS
   useEffect(() => {
     setLoading(true);
     setPosts([]);
-  
+
     // Set up a real-time listener on the "posts" collection
     const postsRef = collection(db, "posts");
     const q = query(postsRef); // Modify if you want ordering (e.g., orderBy("timestamp", "desc"))
-  
+
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
@@ -211,9 +213,9 @@ export default function CommunityScreen() {
             ? new Date(doc.data().timestamp.seconds * 1000)
             : new Date(0),
         }));
-  
+
         console.log(`Received ${allPosts.length} posts`);
-  
+
         // Sort all posts by timestamp (newest first)
         setPosts(allPosts.sort((a, b) => b.createdAt - a.createdAt));
         setLoading(false);
@@ -223,14 +225,14 @@ export default function CommunityScreen() {
         setLoading(false);
       }
     );
-  
+
     // Cleanup the listener when component unmounts
     return () => {
       console.log("Cleaning up post listener");
       unsubscribe();
     };
   }, []);
-  
+
   return (
     <View style={{ flex: 1, width: "100%" }}>
       <ScrollView
@@ -243,9 +245,28 @@ export default function CommunityScreen() {
               {loading ? (
                 <Text style={globalStyles.p}>Loading posts...</Text>
               ) : posts.length === 0 ? (
-                <Text style={globalStyles.p}>
-                  No posts yet. Be the first to post!
-                </Text>
+                <View
+                  style={{
+                    alignItems: "center",
+                    gap: 16,
+                    paddingHorizontal: 16,
+                    marginTop: 56,
+                  }}
+                >
+                  <Image
+                    source={require("../../assets/nopost.png")}
+                    style={{ width: 183, height: 102 }}
+                  />
+                  <Text
+                    style={[
+                      globalStyles.smallText,
+                      { textAlign: "center", opacity: 0.5 },
+                    ]}
+                  >
+                    No posts yet...{"\n"}
+                    Be the first to post!
+                  </Text>
+                </View>
               ) : (
                 posts.map((post, index) => (
                   <View
@@ -254,16 +275,27 @@ export default function CommunityScreen() {
                   >
                     <View style={{ flexDirection: "row", gap: 12 }}>
                       <Image
-                        source={post.profileImageUri ? { uri: post.profileImageUri } : require("../../assets/Avatar.png")}
+                        source={
+                          post.profileImageUri
+                            ? { uri: post.profileImageUri }
+                            : require("../../assets/Avatar.png")
+                        }
                         style={{
                           width: 56,
                           height: 56,
-                          borderRadius: 56 / 2 ,
+                          borderRadius: 56 / 2,
                         }}
                       ></Image>
                       <View style={[{ flexDirection: "column" }]}>
                         <Text style={globalStyles.pBold}>{post.name}</Text>
-                        <Text style={[globalStyles.p,  {marginTop: 2, fontSize: 14}]}>{post.topicCategory}</Text>
+                        <Text
+                          style={[
+                            globalStyles.p,
+                            { marginTop: 2, fontSize: 14 },
+                          ]}
+                        >
+                          {post.topicCategory}
+                        </Text>
                       </View>
                     </View>
                     <Text style={[globalStyles.p, { color: COLORS.black }]}>
@@ -308,28 +340,34 @@ export default function CommunityScreen() {
                             </Text>
                           </View>
                         </Pressable>
-                        <Pressable onPress={() => navigation.navigate('PostScreen', { post, heart })}>
-                        <View
-                          style={{
-                            flexDirection: "row",
-                            gap: 8,
-                            alignItems: "center",
-                          }}
+                        <Pressable
+                          onPress={() =>
+                            navigation.navigate("PostScreen", { post, heart })
+                          }
                         >
-                          <Icon
-                            name="comment-outline"
-                            size={24}
-                            color={"#b3b3b3"}
-                          />
-                          <Text
-                            style={[globalStyles.pBold, { color: "#b3b3b3" }]}
+                          <View
+                            style={{
+                              flexDirection: "row",
+                              gap: 8,
+                              alignItems: "center",
+                            }}
                           >
-                            {post.replyCount || 0}
-                          </Text>
-                        </View>
+                            <Icon
+                              name="comment-outline"
+                              size={24}
+                              color={"#b3b3b3"}
+                            />
+                            <Text
+                              style={[globalStyles.pBold, { color: "#b3b3b3" }]}
+                            >
+                              {post.replyCount || 0}
+                            </Text>
+                          </View>
                         </Pressable>
                       </View>
-                      <Text style={[globalStyles.p, {color: '#b3b3b3'}]}>{post.timestamp}</Text>
+                      <Text style={[globalStyles.p, { color: "#b3b3b3" }]}>
+                        {post.timestamp}
+                      </Text>
                     </View>
                   </View>
                 ))

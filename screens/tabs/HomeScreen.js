@@ -144,19 +144,28 @@ export default function HomeScreen() {
 
   // const [visible, setVisible] = useState(true); // for non arrays
   const [visibleQuests, setVisibleQuests] = useState([]); // Initially, all quests are visible
+  const [questAnimations, setQuestAnimations] = useState([]);
 
   // Update visibleQuests when quests are loaded
   useEffect(() => {
     if (quests.length > 0) {
       setVisibleQuests(new Array(quests.length).fill(true)); // Ensure all quests are initially visible
+      setQuestAnimations(quests.map(() => new Animated.Value(1))); // Start fully visible
     }
   }, [quests]); // Runs only when `quests` updates
+
   const [showNotification, setShowNotification] = useState(false);
 
   // const fadeAnim = new Animated.Value(0); // For fade-in effect
   const [lastRemovedIndex, setLastRemovedIndex] = useState(null);
   const handleHideComponent = (index) => {
     // setVisible(false); // Hide the component
+
+    Animated.timing(questAnimations[index], {
+      toValue: 0, // Fully hidden
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
     setVisibleQuests((prev) =>
       prev.map((isVisible, i) => (i === index ? false : isVisible))
     );
@@ -164,18 +173,28 @@ export default function HomeScreen() {
 
     setShowNotification(true); // Show notification // State update happens asynchronously
     console.log("Notification state: ", showNotification);
+  });
   };
 
   const handleShowComponent = () => {
     // setVisible(false); // Hide the component
     if (lastRemovedIndex !== null) {
+      
       setVisibleQuests((prev) =>
         prev.map((isVisible, i) => (i === lastRemovedIndex ? true : isVisible))
       );
+      setTimeout(() => {
+      Animated.timing(questAnimations[lastRemovedIndex], {
+        toValue: 1, // Fully visible again
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => {
       setLastRemovedIndex(null); // Reset index after restoring
-    }
+    });
+  }, 50); // Small delay to ensure visibility before animation starts
     setShowNotification(false); // Show notification // State update happens asynchronously
     console.log("Notification state: ", showNotification);
+  }
   };
 
   const onDismissSnackBar = () => {
@@ -375,6 +394,19 @@ export default function HomeScreen() {
                 ) : (
                   quests.map((quest, index) =>
                     visibleQuests[index] ? (
+                      <Animated.View
+                    key={index}
+                    style={[
+                      
+                      {
+                        opacity: questAnimations[index], // Fade effect
+                        transform: [{ translateX: questAnimations[index].interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [300, 0], // Moves out of view
+                        }) }],
+                      },
+                    ]}
+                  >
                       <QuestButton
                         key={index}
                         title={quest.title}
@@ -385,6 +417,7 @@ export default function HomeScreen() {
                           handleCompletedQuest(quest.category);
                         }}
                       />
+                      </Animated.View>
                     ) : null
                   )
                 )
@@ -477,5 +510,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 8,
     marginTop: 8,
-  }
+  },
+
 });

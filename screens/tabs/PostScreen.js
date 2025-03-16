@@ -111,7 +111,7 @@ const CommentReply = ({
   // Toggle expanded state for this comment
   const toggleExpanded = () => {
     if (isExpanded) {
-      setExpandedReplies(expandedReplies.filter(id => id !== reply.id));
+      setExpandedReplies(expandedReplies.filter((id) => id !== reply.id));
     } else {
       setExpandedReplies([...expandedReplies, reply.id]);
     }
@@ -124,8 +124,12 @@ const CommentReply = ({
           <Icon name="arrow-right-bottom" size={16} color="#b3b3b3" />
         )}
         <Image
-          source={profileImage ? { uri: profileImage } : require("../../assets/Avatar.png")}
-          style={{ width: 24, height: 24, borderRadius: 24/2 }}
+          source={
+            profileImage
+              ? { uri: profileImage }
+              : require("../../assets/Avatar.png")
+          }
+          style={{ width: 24, height: 24, borderRadius: 24 / 2 }}
         />
         <Text style={[globalStyles.pBold, { color: COLORS.black }]}>
           {reply.name}
@@ -206,7 +210,7 @@ export default function PostScreen() {
   const { post } = route.params;
   const userUid = getAuth().currentUser.uid;
   const screenWidth = useWindowDimensions().width;
-  
+
   // State variables
   const [comment, setComment] = useState("");
   const [comments, setComments] = useState([]);
@@ -221,10 +225,10 @@ export default function PostScreen() {
     id: null,
     author: null,
   });
-  
+
   // State to track expanded replies - store IDs of expanded comments
   const [expandedReplies, setExpandedReplies] = useState([]);
-  
+
   // Ref to maintain scroll position
   const scrollViewRef = useRef(null);
   const [scrollPosition, setScrollPosition] = useState(0);
@@ -304,7 +308,7 @@ export default function PostScreen() {
       if (scrollViewRef.current) {
         scrollViewRef.current.scrollTo({ y: scrollPosition, animated: false });
       }
-      
+
       const userDocRef = doc(db, "users", userUid);
       const userDocSnap = await getDoc(userDocRef);
 
@@ -336,10 +340,10 @@ export default function PostScreen() {
         await updateDoc(parentCommentRef, {
           replyCount: increment(1),
         });
-        
+
         // If replying to a comment that isn't yet expanded, expand it
         if (!expandedReplies.includes(parentId)) {
-          setExpandedReplies(prev => [...prev, parentId]);
+          setExpandedReplies((prev) => [...prev, parentId]);
         }
       }
 
@@ -400,9 +404,11 @@ export default function PostScreen() {
     });
 
     // Sort replies within each comment, newest first
-    topLevelComments.forEach(comment => {
+    topLevelComments.forEach((comment) => {
       if (comment.replies && comment.replies.length > 0) {
-        comment.replies.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+        comment.replies.sort(
+          (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+        );
       }
     });
 
@@ -513,16 +519,16 @@ export default function PostScreen() {
   const RepliesContainer = ({ comment, children }) => {
     // Get the expanded state for this comment
     const isExpanded = expandedReplies.includes(comment.id);
-    
+
     // Toggle expanded state for this comment
     const toggleExpanded = () => {
       if (isExpanded) {
-        setExpandedReplies(expandedReplies.filter(id => id !== comment.id));
+        setExpandedReplies(expandedReplies.filter((id) => id !== comment.id));
       } else {
         setExpandedReplies([...expandedReplies, comment.id]);
       }
     };
-    
+
     return (
       <View style={{ marginLeft: 16 }}>
         {!isExpanded ? (
@@ -589,7 +595,7 @@ export default function PostScreen() {
 
   return (
     <PaperProvider>
-      <ScrollView 
+      <ScrollView
         ref={scrollViewRef}
         onScroll={handleScroll}
         scrollEventThrottle={16}
@@ -606,7 +612,7 @@ export default function PostScreen() {
               name={post.name}
               subtitle={post.topicCategory}
               postId={post.id}
-              collection={'posts'}
+              collection={"posts"}
             />
 
             <Text style={[globalStyles.p, { color: COLORS.black }]}>
@@ -646,48 +652,73 @@ export default function PostScreen() {
           </View>
 
           {/* Comments list */}
-          {organizedComments.map((comment, index) => (
-            <View
-              key={index}
-              style={[
-                globalStyles.gap16,
-                styles.postContainer,
-                { borderTopWidth: 1, borderColor: "#E8E8E8" },
-              ]}
-            >
-              <UserHeader 
-                name={comment.name} 
-                subtitle={comment.timestamp} 
-                postId={comment.id} 
-                collection={'comments'}
-              />
+          {organizedComments.length !== 0 ? (
+            organizedComments.map((comment, index) => (
+              <View
+                key={index}
+                style={[
+                  globalStyles.gap16,
+                  styles.postContainer,
+                  { borderTopWidth: 1, borderColor: "#E8E8E8" },
+                ]}
+              >
+                <UserHeader
+                  name={comment.name}
+                  subtitle={comment.timestamp}
+                  postId={comment.id}
+                  collection={"comments"}
+                />
 
-              <Text style={[globalStyles.p, { color: COLORS.black }]}>
-                {comment.comment}
-              </Text>
+                <Text style={[globalStyles.p, { color: COLORS.black }]}>
+                  {comment.comment}
+                </Text>
 
-              <View style={styles.commentActionsContainer}>
-                <View style={styles.actionsRow}>
-                  <ActionButton
-                    icon="heart-outline"
-                    count={comment.likes}
-                    onPress={() => toggleLikeComment(comment.id)}
-                    isActive={likedStateComment[comment.id]}
-                    size={16}
-                  />
-                  <ActionButton
-                    icon="reply-outline"
-                    count={comment.replyCount}
-                    onPress={() => openReplyToComment(comment.id)}
-                    isActive={false}
-                    size={16}
-                  />
+                <View style={styles.commentActionsContainer}>
+                  <View style={styles.actionsRow}>
+                    <ActionButton
+                      icon="heart-outline"
+                      count={comment.likes}
+                      onPress={() => toggleLikeComment(comment.id)}
+                      isActive={likedStateComment[comment.id]}
+                      size={16}
+                    />
+                    <ActionButton
+                      icon="reply-outline"
+                      count={comment.replyCount}
+                      onPress={() => openReplyToComment(comment.id)}
+                      isActive={false}
+                      size={16}
+                    />
+                  </View>
                 </View>
-              </View>
 
-              {renderMainReplies(comment)}
+                {renderMainReplies(comment)}
+              </View>
+            ))
+          ) : (
+            <View
+              style={{
+                alignItems: "center",
+                gap: 16,
+                paddingHorizontal: 16,
+                marginTop: 24,
+              }}
+            >
+              <Image
+                source={require("../../assets/nopost.png")}
+                style={{ width: 183, height: 102 }}
+              />
+              <Text
+                style={[
+                  globalStyles.smallText,
+                  { textAlign: "center", opacity: 0.5 },
+                ]}
+              >
+                No replies yet...{"\n"}
+                Be the first to comment!
+              </Text>
             </View>
-          ))}
+          )}
         </View>
       </ScrollView>
 

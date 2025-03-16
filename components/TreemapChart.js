@@ -128,6 +128,19 @@ useEffect(() => {
           >
             {leaf.data.name}
           </SvgText>
+          <SvgText
+            x={(leaf.x0 + leaf.x1) / 2} // Horizontal center
+            y={((leaf.y0 + leaf.y1) / 2) + 16} // Vertical center
+            fontSize="12"
+            fill="white"
+            // dy="8" // Add vertical padding
+            // dx="8"// Add horizontal padding
+            textAnchor="middle" // Horizontally center the text
+            dominantBaseline="middle" // Vertically center the text
+            opacity={0.65}
+          >
+            {leaf.data.value}
+          </SvgText>
         </React.Fragment>
       ))}
     </Svg>

@@ -32,6 +32,7 @@ import CreatePost from "./screens/CreatePost.js";
 import ExploreScreen from "./screens/tabs/ExploreScreen.js";
 import TabScreen from "./screens/tabs/Community/TabScreen.js";
 import PostScreen from "./screens/tabs/PostScreen.js";
+import MusicScreen from "./screens/tabs/music/MusicScreen.js";
 
 
 
@@ -183,6 +184,11 @@ const MainAppFlow = () => {
         component={Profile}
         options={{ headerShown: false }}
       />
+        {/* <Tab.Screen
+        name="Music"
+        component={MusicScreen}
+        options={{ headerShown: false }}
+      /> */}
     </Tab.Navigator>
   );
 };

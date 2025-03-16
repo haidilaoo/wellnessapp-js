@@ -238,9 +238,28 @@ export default function DeepTalkTab() {
               {loading ? (
                 <Text style={globalStyles.p}>Loading posts...</Text>
               ) : posts.length === 0 ? (
-                <Text style={globalStyles.p}>
-                  No posts yet. Be the first to post!
-                </Text>
+                <View
+                                  style={{
+                                    alignItems: "center",
+                                    gap: 16,
+                                    paddingHorizontal: 16,
+                                    marginTop: 56,
+                                  }}
+                                >
+                                  <Image
+                                    source={require("../../../assets/nopost.png")}
+                                    style={{ width: 183, height: 102 }}
+                                  />
+                                  <Text
+                                    style={[
+                                      globalStyles.smallText,
+                                      { textAlign: "center", opacity: 0.5 },
+                                    ]}
+                                  >
+                                    No posts in this topic yet...{"\n"}
+                                    Be the first to post!
+                                  </Text>
+                                </View>
               ) : (
                 posts.map((post) => (
                   <View

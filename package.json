@@ -25,6 +25,8 @@
     "d3-scale": "^4.0.2",
     "date-fns": "^4.1.0",
     "expo": "~52.0.26",
+    "expo-auth-session": "~6.0.3",
+    "expo-constants": "~17.0.7",
     "expo-font": "~13.0.3",
     "expo-image-picker": "^16.0.6",
     "expo-modules-core": "~2.1.4",
@@ -46,9 +48,8 @@
     "react-native-slider": "^0.11.0",
     "react-native-svg": "15.8.0",
     "react-native-vector-icons": "^10.2.0",
-    "react-navigation": "^5.0.0",
-    "expo-auth-session": "~6.0.3",
-    "expo-constants": "~17.0.7"
+    "react-native-webview": "^13.13.4",
+    "react-navigation": "^5.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"
