@@ -10,6 +10,7 @@ import {
   Platform,
   ScrollView,
 } from "react-native";
+import FastImage from 'react-native-fast-image'
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { COLORS, globalStyles } from "../../globalStyles";
 import { useRoute } from "@react-navigation/native";
@@ -126,8 +127,10 @@ const CommentReply = ({
         <Image
           source={
             profileImage
-              ? { uri: profileImage }
-              : require("../../assets/Avatar.png")
+              ? { uri: profileImage ,  
+              }
+              :
+               require("../../assets/Avatar.png")
           }
           style={{ width: 24, height: 24, borderRadius: 24 / 2 }}
         />
@@ -747,7 +750,7 @@ export default function PostScreen() {
                 autoFocus={true}
                 numberOfLines={4}
                 maxLength={250}
-                value={comment}
+                // value={comment} // to prevent flicker on typing
                 style={styles.replyInput}
                 onChangeText={(text) => {
                   setComment(text);
