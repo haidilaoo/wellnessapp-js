@@ -2,12 +2,12 @@ import React, { useState, useEffect, useLayoutEffect } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 // import { TextInput } from "react-native-gesture-handler";
 import { TextInput, Provider as PaperProvider } from "react-native-paper"; //using this instead of native TextInput as this has built in support for floating labels
+import Toast, { BaseToast, ErrorToast } from "react-native-toast-message";
 import { COLORS, globalStyles, theme } from "../../globalStyles";
 import Button from "../../components/Button";
 import { useNavigation, CommonActions } from "@react-navigation/native"; // Import navigation hook
 // import { useUser } from "./UserContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
 
 //AUTHENTICATION
 import { initializeApp } from "@firebase/app";
@@ -22,12 +22,11 @@ import {
 import { initializeAuth, getReactNativePersistence } from "firebase/auth";
 import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
 
-
 //Google Sign in
 import * as Google from "expo-auth-session/providers/google";
 import * as AuthSession from "expo-auth-session";
-import * as WebBrowser from 'expo-web-browser';
-import { GoogleAuthProvider,  signInWithCredential } from "@firebase/auth";
+import * as WebBrowser from "expo-web-browser";
+import { GoogleAuthProvider, signInWithCredential } from "@firebase/auth";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -64,10 +63,8 @@ const AuthScreen = ({
   isLogin,
   setIsLogin,
   handleAuthentication,
-  promptAsync
+  promptAsync,
 }) => {
-
-
   return (
     <PaperProvider theme={theme}>
       <View style={[globalStyles.container, globalStyles.spaceBetween]}>
@@ -108,7 +105,7 @@ const AuthScreen = ({
             />
           )}
 
-          <Text style={[{ margin: 32, alignSelf: "center" }]}>or</Text>
+          {/* <Text style={[{ margin: 32, alignSelf: "center" }]}>or</Text>
           <Button
             title="Continue with Google"
             // onPress={() => promptAsync()}
@@ -118,7 +115,7 @@ const AuthScreen = ({
             // iconColor="COLORS.primary"
             imageSource={require("../../assets/google-icon.png")} // Local image source
             imageSize={24} // Adjust size of the image
-          />
+          /> */}
         </View>
         <View>
           <Button
@@ -137,6 +134,21 @@ const AuthScreen = ({
             </Text>
           </View>
         </View>
+        {/* <Snackbar
+          visible={errorVisible}
+          onDismiss={onDismissSnackBar}
+          duration={5000}
+          action={{
+            icon: 'close',
+            onIconPress: onDismissSnackBar, 
+            color: COLORS.white,
+          }}  
+          style= {{backgroundColor: COLORS.black, }}   
+          theme={{colors: {text: COLORS.white}}}
+        >
+          {errorMsg}
+        </Snackbar> */}
+        <Toast config={toastConfig} />
       </View>
     </PaperProvider>
   );
@@ -167,18 +179,54 @@ export default App = ({ route }) => {
     return () => unsubscribe();
   }, [auth]);
 
+  const validatePassword = (password) => {
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
+    let result = passwordRegex.test(password);
+    if ((result === false)) {
+      console.log("Error: Confirm password cannot be empty.");
+      Toast.show({
+        type: "error",
+        text1: "Password error",
+        text2:
+          "Password must have at least 6 characters, including 1 uppercase letter, 1 lowercase letter, and 1 digit.",
+        visibilityTime: 4000,
+        position: "bottom",
+      });
+      return false;
+    } else {
+      return true;
+    }
+  };
+
   const validateConfirmPassword = () => {
     if (confirmPassword === "") {
-      console.error("Error: Confirm password cannot be empty.");
+      console.log("Error: Confirm password cannot be empty.");
+      Toast.show({
+        type: "error",
+        text1: "Password error",
+        // text2: 'Invalid email address 🛑',
+        text2: "Confirm password cannot be empty.",
+        visibilityTime: 4000,
+        position: "bottom",
+      });
       return false;
     }
     if (confirmPassword !== password) {
-      console.error("Error: Passwords do not match.");
+      console.log("Error: Passwords do not match.");
+      Toast.show({
+        type: "error",
+        text1: "Passwords mismatch",
+        // text2: 'Invalid email address 🛑',
+        text2: "Passwords do not match.",
+        visibilityTime: 4000,
+        position: "bottom",
+      });
       return false;
     }
     return true;
   };
   const { selection, currentEmotion } = useUser();
+
   const handleAuthentication = async () => {
     try {
       if (user) {
@@ -192,7 +240,7 @@ export default App = ({ route }) => {
           await signInWithEmailAndPassword(auth, email, password);
           console.log("selection:", selection);
           console.log("currentEmotion:", currentEmotion);
-               
+
           // if (selection === null) {
           //   console.log('selection is null, navigating to OnboardingFlow');
           //   navigation.navigate("OnboardingFlow", { screen: "FirstTimer" });
@@ -205,6 +253,10 @@ export default App = ({ route }) => {
           // }
           console.log("User signed in successfully!");
         } else {
+          //check if password contains minimum 6 characters, At least one lowercase letter,At least one uppercase letter,At least one digit (number)
+          if (!validatePassword(password)) {
+            return;
+          }
           // Sign up (validate confirm password)
           if (!validateConfirmPassword()) {
             return; // Stop execution if validation fails
@@ -224,37 +276,63 @@ export default App = ({ route }) => {
             profileImageUri: null,
           });
           console.log("User registered and added to Firestore:", user.uid);
-   
         }
       }
     } catch (error) {
-      console.error("Authentication error:", error.message);
+      console.log("Authentication error:", error.message);
+      // const message = error.message || 'An error occurred';
+      let message = "";
+      let title = "";
+      if (error.message === "Firebase: Error (auth/email-already-in-use).") {
+        title = "Authentication failed";
+        message = "Email already in use 🛑";
+      } else if (error.message === "Firebase: Error (auth/invalid-email).") {
+        title = "Authentication failed";
+        message = "Invalid email address 🛑";
+      } else if (
+        error.message ===
+        "Firebase: Password should be at least 6 characters (auth/weak-password)."
+      ) {
+        title = "Weak password";
+        message = "Password should be at least 6 characters";
+      } else {
+        title = "Authentication failed";
+        message = error.message || "An error occurred. Please try again.";
+      }
+
+      Toast.show({
+        type: "error",
+        text1: title,
+        // text2: 'Invalid email address 🛑',
+        text2: message,
+        visibilityTime: 4000,
+        position: "bottom",
+      });
     }
   };
 
   const discovery = {
-    authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
-    tokenEndpoint: 'https://oauth2.googleapis.com/token',
+    authorizationEndpoint: "https://accounts.google.com/o/oauth2/v2/auth",
+    tokenEndpoint: "https://oauth2.googleapis.com/token",
   };
-// const [userInfo, setUserInfo] = React.useState();
-//   const [request, response, promptAsync] = Google.useAuthRequest({
-//     androidClientId:
-//     '1011145449920-mjptpu7sveg951hk401imblhatjujhcb.apps.googleusercontent.com',
-//     iosClientId: '',
-//     webClientId: '1011145449920-d1rnhn4u2h0tbntcqjv4eoat4evhbbii.apps.googleusercontent.com',
-//     redirectUri: AuthSession.makeRedirectUri({
-//       useProxy: true, // Uses Expo’s Auth proxy
-//     }),
-  
-//   },discovery);
-//   React.useEffect(() => {
-//     if (response?.type === 'success') {
-//       const { id_token } = response.params;
-//       const credential = GoogleAuthProvider.credential(id_token);
-//       signInWithCredential(auth, credential);
-//     }
-//   }, [response]);
-  
+  // const [userInfo, setUserInfo] = React.useState();
+  //   const [request, response, promptAsync] = Google.useAuthRequest({
+  //     androidClientId:
+  //     '1011145449920-mjptpu7sveg951hk401imblhatjujhcb.apps.googleusercontent.com',
+  //     iosClientId: '',
+  //     webClientId: '1011145449920-d1rnhn4u2h0tbntcqjv4eoat4evhbbii.apps.googleusercontent.com',
+  //     redirectUri: AuthSession.makeRedirectUri({
+  //       useProxy: true, // Uses Expo’s Auth proxy
+  //     }),
+
+  //   },discovery);
+  //   React.useEffect(() => {
+  //     if (response?.type === 'success') {
+  //       const { id_token } = response.params;
+  //       const credential = GoogleAuthProvider.credential(id_token);
+  //       signInWithCredential(auth, credential);
+  //     }
+  //   }, [response]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -282,11 +360,41 @@ export default App = ({ route }) => {
           setConfirmPassword={setConfirmPassword} // Pass state setters to AuthScreen
           setIsLogin={setIsLogin}
           handleAuthentication={handleAuthentication}
+
           // promptAsync={promptAsync}
         />
       )}
     </ScrollView>
   );
+};
+
+const toastConfig = {
+  error: ({ text1, text2, ...rest }) => (
+    <View 
+      style={{
+        width: '90%',
+        backgroundColor: COLORS.white,
+        borderLeftColor: "#FF4B4B",
+        borderLeftWidth: 6,
+        borderRadius: 4,
+        padding: 16,
+        marginHorizontal: 16,
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.2,
+        shadowRadius: 2,
+        elevation: 2,
+      }}
+    >
+      <View style={{ flex: 1 }}>
+        <Text style={[globalStyles.smallTextBold]}>{text1}</Text>
+        <Text style={[globalStyles.smallText, { marginTop: 4 }]}>{text2}</Text>
+      </View>
+    </View>
+  ),
+  // You can define more types like 'success', 'info', etc.
 };
 
 const styles = StyleSheet.create({

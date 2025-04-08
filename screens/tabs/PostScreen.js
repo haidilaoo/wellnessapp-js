@@ -598,10 +598,10 @@ export default function PostScreen() {
 
   return (
     <PaperProvider>
-      <ScrollView
-        ref={scrollViewRef}
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
+      <ScrollView 
+        // ref={scrollViewRef} //causing flicker
+        // onScroll={handleScroll}
+        // scrollEventThrottle={16}
       >
         <View
           style={[

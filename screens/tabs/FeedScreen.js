@@ -32,7 +32,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 
-// Helper function to format timestamps in a Reddit-like style
+// Helper function to format timestamps in a relative time style
 const formatRelativeTime = (timestamp) => {
   if (!timestamp) return "Unknown time";
 
