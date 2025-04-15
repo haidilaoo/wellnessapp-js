@@ -33,14 +33,15 @@ export default function CreatePost() {
   const actionSheetRef = useRef(null);
 
   const handlePress = (index) => {
+    // if (index === 0) {
+    //   Alert.alert("Draft Saved", "Your draft has been saved!", [
+    //     {
+    //       text: "OK",
+    //       onPress: () => navigation.goBack(), // Go back to the previous screen after pressing OK
+    //     },
+    //   ]);
+    // } else 
     if (index === 0) {
-      Alert.alert("Draft Saved", "Your draft has been saved!", [
-        {
-          text: "OK",
-          onPress: () => navigation.goBack(), // Go back to the previous screen after pressing OK
-        },
-      ]);
-    } else if (index === 1) {
       Alert.alert("Deleted", "Your post has been deleted.", [
         {
           text: "OK",
@@ -165,9 +166,9 @@ export default function CreatePost() {
             <ActionSheet
               ref={actionSheetRef}
               title="Are you sure?"
-              options={["Save Draft", "Delete", "Cancel"]}
-              cancelButtonIndex={2} // Clicking this closes the sheet
-              destructiveButtonIndex={1} // Makes "Delete" red (for emphasis)
+              options={[ "Delete", "Cancel"]}
+              cancelButtonIndex={1} // Clicking this closes the sheet
+              destructiveButtonIndex={0} // Makes "Delete" red (for emphasis)
               onPress={handlePress} // Handles button clicks
             />
             <Button

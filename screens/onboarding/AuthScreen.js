@@ -295,7 +295,11 @@ export default App = ({ route }) => {
       ) {
         title = "Weak password";
         message = "Password should be at least 6 characters";
-      } else {
+      } else if (error.message === "Firebase: Error (auth/invalid-credential).") {
+        title = "Authentication failed";
+        message = "❌ Wrong email or password. Please try again.";
+      } 
+      else {
         title = "Authentication failed";
         message = error.message || "An error occurred. Please try again.";
       }
