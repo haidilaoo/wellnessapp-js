@@ -298,7 +298,10 @@ export default App = ({ route }) => {
       } else if (error.message === "Firebase: Error (auth/invalid-credential).") {
         title = "Authentication failed";
         message = "❌ Wrong email or password. Please try again.";
-      } 
+      }  else if (error.message === "Firebase: Error (auth/missing-password).") {
+        title = "Missing password";
+        message = "Please fill in your password.";
+      }
       else {
         title = "Authentication failed";
         message = error.message || "An error occurred. Please try again.";
