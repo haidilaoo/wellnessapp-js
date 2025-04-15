@@ -25,8 +25,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import CircleWithText from "../../components/CircleWithText";
-// Import BubbleChart instead of CircleArrangement
-import BubbleChart from "../../components/BubbleChart";
+import CircleArrangement from "../../components/CircleArrangement";
 import TreemapChart from "../../components/TreemapChart";
 import { Chip, Modal, PaperProvider } from "react-native-paper";
 import Icon from "react-native-vector-icons/Feather";
@@ -39,6 +38,7 @@ import UploadModal from "../../components/UploadModal";
 import * as ImagePicker from "expo-image-picker";
 import { updateProfileImageInPosts } from "../../updateProfileImageInPosts";
 import { updateProfileImageInComments } from "../../updateProfileImageInComments";
+import BubbleChart from "../../components/BubbleChart";
 
 export default function Profile({ navigation }) {
   const [profileImage, setProfileImage] = useState(null);
@@ -131,15 +131,21 @@ export default function Profile({ navigation }) {
   const [selectedCircle, setSelectedCircle] = useState(null);
   const [reasons, setReasons] = useState([]);
   const [topEmotions, setTopEmotions] = useState([]);
-  
-  // State for bubble chart data
-  const [bubbleData, setBubbleData] = useState([]);
 
-  const handleSelect = (bubble) => {
-    setSelectedCircle(bubble);
+  const handleSelect = (circle) => {
+    setSelectedCircle(circle);
   };
 
-  // 1st useEffect: Fetch top 5 emotions and format for BubbleChart
+  // const bubbleData = [
+  //   { name: "Happy", value: 8 },
+  //   { name: "Excited", value: 5 },
+  //   { name: "Calm", value: 4 },
+  //   { name: "Anxious", value: 3 },
+  //   { name: "Tired", value: 3 },
+  // ];
+  const [circles, setCircles] = useState([]);
+
+  // 1st useEffect: Fetch top 5 emotions
   useEffect(() => {
     const fetchTopEmotions = async () => {
       try {
@@ -152,24 +158,11 @@ export default function Profile({ navigation }) {
           count: doc.data().count,
         }));
 
-        // Format emotions for BubbleChart data format
-        const bubbles = 
-        emotions
-        .filter(emotion => emotion.count > 0)
-        .map(emotion => ({
-          name: emotion.id,
-          value: emotion.count
-        }));
-        
-        // Fill with placeholder data if needed
-        // while (bubbles.length < 5) {
-        //   bubbles.push({ name: "N/A", value: 0 });
-        // }
-        
+        while (emotions.length < 5) {
+          emotions.push({ id: "N/A", count: 0 });
+        }
+        console.log("Circles data:", circles);
         setTopEmotions(emotions);
-        setBubbleData(bubbles);
-        
-        console.log("Bubble data:", bubbles);
       } catch (error) {
         console.error("Error fetching top emotions:", error);
       }
@@ -179,6 +172,55 @@ export default function Profile({ navigation }) {
       fetchTopEmotions();
     }
   }, [db, userUid]);
+
+  // Add this useEffect to map topEmotions to circles whenever topEmotions changes
+  useEffect(() => {
+    if (topEmotions.length > 0) {
+      // Filter out N/A emotions first
+      const validEmotions = topEmotions.filter(
+        (emotion) => emotion.id !== "N/A"
+      );
+      if (validEmotions.length > 0) {
+        // Create a size scale based on the emotion count
+        const maxSize = 160;
+        const minSize = 80;
+
+        // Find the highest count for scaling (if all counts are 0, use 1 to avoid division by zero)
+        const maxCount = Math.max(
+          ...topEmotions.map((emotion) => emotion.count),
+          1
+        );
+
+        const mappedCircles = topEmotions.map((emotion, index) => {
+          // Set size to 0 for N/A emotions to hide them
+          if (emotion.id === "N/A") {
+            return {
+              text: "",
+              size: 0,
+              value: 0,
+            };
+          }
+
+          // Calculate size based on count (higher count = larger circle)
+          const size =
+            emotion.count === 0
+              ? minSize
+              : minSize + (maxSize - minSize) * (emotion.count / maxCount);
+
+          return {
+            text: emotion.id,
+            size: Math.round(size),
+            value: emotion.count,
+          };
+        });
+
+        setCircles(mappedCircles);
+      }
+    } else {
+      // If there are no valid emotions, set circles to empty array
+      setCircles([]);
+    }
+  }, [topEmotions]);
 
   // Fetch reasons from Firestore when selectedCircle changes
   useEffect(() => {
@@ -190,7 +232,7 @@ export default function Profile({ navigation }) {
             "users",
             userUid,
             "emotion_tally",
-            selectedCircle.name
+            selectedCircle.text
           );
 
           const reasonDoc = await getDoc(reasonsRef);
@@ -470,10 +512,10 @@ export default function Profile({ navigation }) {
                       width: "100%",
                     }}
                   >
-                    {bubbleData.length > 0 ? (
-                      <BubbleChart
-                        data={bubbleData}
-                        selectedBubble={selectedCircle}
+                    {circles.length > 0 ? (
+                      <CircleArrangement
+                        circles={circles}
+                        selectedCircle={selectedCircle}
                         onSelect={handleSelect}
                       />
                     ) : (
@@ -499,8 +541,13 @@ export default function Profile({ navigation }) {
                         </Text>
                       </View>
                     )}
+                    {/* <BubbleChart
+                      data={bubbleData}
+                      selectedBubble={selectedCircle}
+                      onSelect={handleSelect}
+                    /> */}
                   </View>
-                  {bubbleData.length > 0 && bubbleData[0].name !== "N/A" ? (
+                  {circles.length > 0 ? (
                     <View
                       style={{
                         backgroundColor: "#F7F8FA",
@@ -515,7 +562,7 @@ export default function Profile({ navigation }) {
                           >
                             Keywords recorded with{" "}
                             <Text style={{ color: COLORS.green }}>
-                              {selectedCircle.name}
+                              {selectedCircle.text}
                             </Text>
                           </Text>
                           <View

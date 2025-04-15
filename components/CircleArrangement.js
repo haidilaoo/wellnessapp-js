@@ -159,6 +159,7 @@ const styles = StyleSheet.create({
   container: {
     position: 'relative',
     marginHorizontal: 16,
+  
   },
   circle: {
     position: 'absolute',
